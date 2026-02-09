@@ -5,65 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Life Dashboard</title>
     <meta name="robots" content="noindex,nofollow">
-
-    <style>
-        :root { --main-bg: #1a1a1a; --card-bg: #2d2d2d; --text: #ffffff; --accent: #00adb5; --today: #ff2e63; }
-        body { background: var(--main-bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 20px; padding-bottom: 100px; }
-        
-        .header { text-align: center; margin-bottom: 30px; }
-        #date { font-size: 1.2rem; color: #aaa; margin-bottom: 5px; }
-        #clock { font-size: 2.5rem; font-weight: bold; color: var(--accent); font-family: monospace; }
-
-        .section { background: var(--card-bg); border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        h2 { margin-top: 0; font-size: 1.1rem; border-left: 4px solid var(--accent); padding-left: 10px; margin-bottom: 15px; }
-
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .nav-btn { background: #3d3d3d; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; }
-
-        .calendar-table { width: 100%; border-collapse: collapse; text-align: center; }
-        .calendar-table th { color: #aaa; font-size: 0.8rem; padding-bottom: 10px; }
-        .calendar-table td { padding: 10px 0; cursor: pointer; border-radius: 8px; position: relative; }
-        .calendar-table td:hover { background: #444; }
-        .calendar-table td.today { background: var(--today); color: white; font-weight: bold; }
-        /* 選択中の日をわかりやすく */
-        .calendar-table td.selected { border: 2px solid var(--accent); }
-        .has-event::after { content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; background: var(--accent); border-radius: 50%; }
-        
-        textarea { width: 100%; background: #3d3d3d; border: 1px solid var(--accent); color: white; border-radius: 10px; padding: 10px; box-sizing: border-box; font-size: 1rem; outline: none; }
-        #selected-date-label { font-size: 0.9rem; color: var(--accent); margin-top: 10px; display: block; height: 1.2rem; }
-
-        .link-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .btn { background: #3d3d3d; color: white; text-decoration: none; padding: 15px; border-radius: 10px; text-align: center; font-size: 0.9rem; }
-
-
-        .sticky-note {
-    padding: 10px;
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-    color: #333;
-    position: relative;
-    border-top: 1px solid rgba(0,0,0,0.05);
-    display: flex;
-    flex-direction: column;
-}
-.sticky-note textarea {
-    background: transparent;
-    border: none;
-    resize: none;
-    width: 100%;
-    height: 100%;
-    font-family: inherit;
-    outline: none;
-}
-.delete-note {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    cursor: pointer;
-    font-size: 12px;
-    color: #999;
-}
-
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -85,15 +27,11 @@
     </div>
 
     <div class="section">
-        <h2>ネタ帳 </h2>
+        <h2>ネタ帳</h2>
         <div id="tab-bar" style="display: flex; gap: 5px; overflow-x: auto; margin-bottom: 10px;"></div>
-    
         <textarea id="idea-note" rows="5" oninput="saveCurrentIdea()"></textarea>
-    
         <button onclick="createNewPage()" style="margin-top:10px;">＋ 新しいページ</button>
     </div>
-
-
 
     <div class="section">
         <h2>今日のメモ</h2>
@@ -115,274 +53,25 @@
         <span id="selected-date-label">日付を選択してください</span>
         <textarea id="event-input" rows="2" placeholder="予定をメモ..." oninput="saveEvent()"></textarea>
     </div>
+
     <div class="section">
-    <h2>付箋 (Sticky Notes)</h2>
-    <div style="margin-bottom: 10px;">
-        <select id="note-color">
-            <option value="#fff9c4">黄色</option>
-            <option value="#ffcdd2">ピンク</option>
-            <option value="#bbdefb">青</option>
-        </select>
-        <select id="note-size">
-            <option value="100px">小</option>
-            <option value="150px">中</option>
-            <option value="200px">大</option>
-        </select>
-        <button onclick="addStickyNote()">＋ 貼る</button>
+        <h2>付箋 (Sticky Notes)</h2>
+        <div style="margin-bottom: 10px;">
+            <select id="note-color">
+                <option value="#fff9c4">黄色</option>
+                <option value="#ffcdd2">ピンク</option>
+                <option value="#bbdefb">青</option>
+            </select>
+            <select id="note-size">
+                <option value="100px">小</option>
+                <option value="150px">中</option>
+                <option value="200px">大</option>
+            </select>
+            <button onclick="addStickyNote()">＋ 貼る</button>
+        </div>
+        <div id="sticky-container" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
     </div>
-    <div id="sticky-container" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
-</div>
 
-
-    <script>
-        let displayDate = new Date();
-        let selectedFullDate = "";
-
-        function updateDisplay() {
-            const now = new Date();
-            const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-            document.getElementById('date').innerText = now.getFullYear() + '/' + (now.getMonth() + 1).toString().padStart(2, '0') + '/' + now.getDate().toString().padStart(2, '0') + ' (' + days[now.getDay()] + ')';
-            document.getElementById('clock').innerText = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
-        }
-
-        function saveDailyMemo() {
-            localStorage.setItem('daily-memo-content', document.getElementById('daily-memo').value);
-        }
-
-        function loadDailyMemo() {
-            document.getElementById('daily-memo').value = localStorage.getItem('daily-memo-content') || "";
-        }
-
-        function createCalendar() {
-            const year = displayDate.getFullYear();
-            const month = displayDate.getMonth();
-            document.getElementById('calendar-month').innerText = `${year}年 ${month + 1}月`;
-            const firstDay = new Date(year, month, 1).getDay();
-            const lastDate = new Date(year, month + 1, 0).getDate();
-            const tbody = document.getElementById('calendar-body');
-            tbody.innerHTML = ""; 
-            const today = new Date();
-
-            for (let i = 0, date = 1; i < 6; i++) {
-                let row = document.createElement('tr');
-                for (let j = 0; j < 7; j++) {
-                    let cell = document.createElement('td');
-                    if (i === 0 && j < firstDay || date > lastDate) {
-                        cell.innerText = "";
-                    } else {
-                        cell.innerText = date;
-                        const fullDate = `${year}-${month + 1}-${date}`;
-                        
-                        if (date === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                            cell.classList.add('today');
-                            // 初期状態で今日を選択状態にする（リロード対策）
-                            if(!selectedFullDate) selectDate(cell, fullDate);
-                        }
-                        
-                        if (localStorage.getItem(fullDate)) cell.classList.add('has-event');
-                        
-                        cell.onclick = () => selectDate(cell, fullDate);
-                        date++;
-                    }
-                    row.appendChild(cell);
-                }
-                tbody.appendChild(row);
-                if (date > lastDate) break;
-            }
-        }
-
-        // 日付を選択した時の処理を一箇所にまとめました
-        function selectDate(element, fullDate) {
-            // 他のセルの選択枠を消す
-            document.querySelectorAll('#calendar-body td').forEach(td => td.classList.remove('selected'));
-            // クリックしたセルに枠をつける
-            element.classList.add('selected');
-            
-            selectedFullDate = fullDate;
-            const parts = fullDate.split('-');
-            document.getElementById('selected-date-label').innerText = `${parts[1]}月${parts[2]}日の予定：`;
-            document.getElementById('event-input').value = localStorage.getItem(fullDate) || "";
-        }
-
-        function saveEvent() {
-            if (!selectedFullDate) return;
-            const text = document.getElementById('event-input').value;
-            if (text) localStorage.setItem(selectedFullDate, text);
-            else localStorage.removeItem(selectedFullDate);
-            updateCalendarDots();
-        }
-
-        function updateCalendarDots() {
-            const year = displayDate.getFullYear();
-            const month = displayDate.getMonth();
-            const cells = document.querySelectorAll('#calendar-body td');
-            cells.forEach(cell => {
-                if(cell.innerText === "") return;
-                const fullDate = `${year}-${month + 1}-${cell.innerText}`;
-                if (localStorage.getItem(fullDate)) cell.classList.add('has-event');
-                else cell.classList.remove('has-event');
-            });
-        }
-
-        function changeMonth(diff) {
-            displayDate.setMonth(displayDate.getMonth() + diff);
-            selectedFullDate = ""; // 月を変えたら選択を解除
-            createCalendar();
-            document.getElementById('event-input').value = "";
-            document.getElementById('selected-date-label').innerText = "日付を選択してください";
-        }
-
-        setInterval(updateDisplay, 1000);
-        updateDisplay();
-        createCalendar();
-        loadDailyMemo();
-
-
-        // データの初期化（保存されたものがあれば読み込み、なければ空のページ1を作る）
-let ideaPages = JSON.parse(localStorage.getItem('idea-pages')) || [{title: "ページ1", content: ""}];
-let currentPageIndex = JSON.parse(localStorage.getItem('current-page-index')) || 0;
-
-// ネタ帳を表示する関数
-function initIdeas() {
-    const tabBar = document.getElementById('tab-bar');
-    tabBar.innerHTML = "";
-    ideaPages.forEach((page, index) => {
-        const btn = document.createElement('button');
-        btn.innerText = page.title;
-        // 今選んでいるページのボタンだけ色を変える（CSSに合わせて調整してください）
-        btn.style.backgroundColor = (index === currentPageIndex) ? "var(--accent)" : "#444";
-        btn.style.color = "white";
-        btn.style.borderRadius = "15px";
-        btn.style.padding = "5px 15px";
-        btn.style.border = "none";
-        
-        btn.onclick = () => switchPage(index);
-                // ダブルクリックで名前変更
-        btn.ondblclick = () => renamePage(index);
-
-        // スマホで長押しした時に名前変更
-        btn.oncontextmenu = (e) => { e.preventDefault(); renamePage(index); };
-
-        tabBar.appendChild(btn);
-    });
-    // 現在のページの内容を表示
-    document.getElementById('idea-note').value = ideaPages[currentPageIndex].content;
-}
-
-// ページを切り替える
-function switchPage(index) {
-    currentPageIndex = index;
-    initIdeas();
-    localStorage.setItem('current-page-index', currentPageIndex);
-}
-
-// 新しいページを作る
-function createNewPage() {
-    const newTitle = prompt("ページ名を入力してください", `ページ${ideaPages.length + 1}`);
-    if (newTitle) {
-        ideaPages.push({title: newTitle, content: ""});
-        currentPageIndex = ideaPages.length - 1;
-        saveAllIdeas();
-        initIdeas();
-    }
-}
-
-// 今書いている内容を保存する
-function saveCurrentIdea() {
-    ideaPages[currentPageIndex].content = document.getElementById('idea-note').value;
-    saveAllIdeas();
-}
-
-// 全データをローカルストレージに保存する
-function saveAllIdeas() {
-    localStorage.setItem('idea-pages', JSON.stringify(ideaPages));
-    localStorage.setItem('current-page-index', currentPageIndex);
-}
-
-// ページを開いた時にネタ帳を準備する
-initIdeas();
-
-function renamePage(index) {
-    const currentTitle = ideaPages[index].title;
-    const newTitle = prompt("新しい名前を入力（空にすると削除）", currentTitle);
-    
-    // キャンセル（「キャンセル」ボタン）なら何もしない
-    if (newTitle === null) return;
-
-    // 名前が空っぽ、またはスペースだけなら削除モード
-    if (newTitle.trim() === "") {
-        const ok = confirm("このページを削除しますか？");
-        if (ok) {
-            ideaPages.splice(index, 1); // ここでデータを消す
-            
-            // もし全部消えちゃったら1ページ目を作る
-            if (ideaPages.length === 0) {
-                ideaPages = [{title: "ページ1", content: ""}];
-            }
-            
-            // インデックスがはみ出さないように0に戻す
-            currentPageIndex = 0;
-            
-            saveAllIdeas(); // ストレージに保存
-            initIdeas();    // 画面を更新
-        }
-    } else {
-        // 名前があるなら名前を書き換える
-        ideaPages[index].title = newTitle;
-        saveAllIdeas();
-        initIdeas();
-    }
-}
-
-let stickyNotes = JSON.parse(localStorage.getItem('sticky-notes')) || [];
-
-function initStickyNotes() {
-    const container = document.getElementById('sticky-container');
-    container.innerHTML = "";
-    stickyNotes.forEach((note, index) => {
-        const div = document.createElement('div');
-        div.className = 'sticky-note';
-        div.style.backgroundColor = note.color;
-        div.style.width = note.size;
-        div.style.height = note.size;
-
-        div.innerHTML = `
-            <span class="delete-note" onclick="deleteStickyNote(${index})">✖</span>
-            <textarea oninput="updateStickyNote(${index}, this.value)">${note.content}</textarea>
-        `;
-        container.appendChild(div);
-    });
-}
-
-function addStickyNote() {
-    const color = document.getElementById('note-color').value;
-    const size = document.getElementById('note-size').value;
-    stickyNotes.push({ color, size, content: "" });
-    saveStickyNotes();
-    initStickyNotes();
-}
-
-function updateStickyNote(index, value) {
-    stickyNotes[index].content = value;
-    saveStickyNotes();
-}
-
-function deleteStickyNote(index) {
-    if (confirm("この付箋を剥がしますか？")) {
-        stickyNotes.splice(index, 1);
-        saveStickyNotes();
-        initStickyNotes();
-    }
-}
-
-function saveStickyNotes() {
-    localStorage.setItem('sticky-notes', JSON.stringify(stickyNotes));
-}
-
-// 起動時に呼び出し
-initStickyNotes();
-
-
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>

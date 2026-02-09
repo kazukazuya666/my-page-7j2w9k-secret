@@ -1,0 +1,113 @@
+:root { 
+    --main-bg: #1a1a1a; 
+    --card-bg: #2d2d2d; 
+    --text: #ffffff; 
+    --accent: #00adb5; 
+    --today: #ff2e63; 
+}
+
+body { 
+    background: var(--main-bg); 
+    color: var(--text); 
+    font-family: sans-serif; 
+    margin: 0; 
+    padding: 20px; 
+    padding-bottom: 100px; 
+}
+
+.header { text-align: center; margin-bottom: 30px; }
+#date { font-size: 1.2rem; color: #aaa; margin-bottom: 5px; }
+#clock { font-size: 2.5rem; font-weight: bold; color: var(--accent); font-family: monospace; }
+
+.section { 
+    background: var(--card-bg); 
+    border-radius: 15px; 
+    padding: 20px; 
+    margin-bottom: 20px; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
+}
+
+h2 { 
+    margin-top: 0; 
+    font-size: 1.1rem; 
+    border-left: 4px solid var(--accent); 
+    padding-left: 10px; 
+    margin-bottom: 15px; 
+}
+
+.calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.nav-btn { background: #3d3d3d; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; }
+
+.calendar-table { width: 100%; border-collapse: collapse; text-align: center; }
+.calendar-table th { color: #aaa; font-size: 0.8rem; padding-bottom: 10px; }
+.calendar-table td { padding: 10px 0; cursor: pointer; border-radius: 8px; position: relative; }
+.calendar-table td:hover { background: #444; }
+.calendar-table td.today { background: var(--today); color: white; font-weight: bold; }
+.calendar-table td.selected { border: 2px solid var(--accent); }
+
+.has-event::after { 
+    content: ''; 
+    position: absolute; 
+    bottom: 4px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    width: 6px; 
+    height: 6px; 
+    background: var(--accent); 
+    border-radius: 50%; 
+}
+
+textarea { 
+    width: 100%; 
+    background: #3d3d3d; 
+    border: 1px solid var(--accent); 
+    color: white; 
+    border-radius: 10px; 
+    padding: 10px; 
+    box-sizing: border-box; 
+    font-size: 1rem; 
+    outline: none; 
+}
+
+#selected-date-label { font-size: 0.9rem; color: var(--accent); margin-top: 10px; display: block; height: 1.2rem; }
+
+.link-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.btn { 
+    background: #3d3d3d; 
+    color: white; 
+    text-decoration: none; 
+    padding: 15px; 
+    border-radius: 10px; 
+    text-align: center; 
+    font-size: 0.9rem; 
+}
+
+.sticky-note {
+    padding: 10px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    color: #333;
+    position: relative;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+.sticky-note textarea {
+    background: transparent !important;
+    border: none !important;
+    resize: none;
+    width: 100%;
+    height: 100%;
+    font-family: inherit;
+    outline: none;
+    color: #333 !important; /* 付箋の中は黒文字で見やすく */
+}
+
+.delete-note {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #666;
+}
