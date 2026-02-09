@@ -1,21 +1,31 @@
 let displayDate = new Date();
 let selectedFullDate = "";
 
-function updateDisplay() {
+// ページ切り替え
+function showPage(pageId) {
+    document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    if (pageId === 'home') updateHomeTodayEvent();
+    window.scrollTo(0, 0);
+}
+
+// 今日の予定をホームに表示
+function updateHomeTodayEvent() {
+    const now = new Date();
+    const fullDate = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+    const event = localStorage.getItem(fullDate) || "本日の予定はありません";
+    document.getElementById('today-event-text').innerText = event;
+}
+
+// 時計の更新
+function updateClock() {
     const now = new Date();
     const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-    document.getElementById('date').innerText = now.getFullYear() + '/' + (now.getMonth() + 1).toString().padStart(2, '0') + '/' + now.getDate().toString().padStart(2, '0') + ' (' + days[now.getDay()] + ')';
-    document.getElementById('clock').innerText = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
+    document.getElementById('date').innerText = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} (${days[now.getDay()]})`;
+    document.getElementById('clock').innerText = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
 }
 
-function saveDailyMemo() {
-    localStorage.setItem('daily-memo-content', document.getElementById('daily-memo').value);
-}
-
-function loadDailyMemo() {
-    document.getElementById('daily-memo').value = localStorage.getItem('daily-memo-content') || "";
-}
-
+// カレンダー作成
 function createCalendar() {
     const year = displayDate.getFullYear();
     const month = displayDate.getMonth();
@@ -23,26 +33,22 @@ function createCalendar() {
     const firstDay = new Date(year, month, 1).getDay();
     const lastDate = new Date(year, month + 1, 0).getDate();
     const tbody = document.getElementById('calendar-body');
-    tbody.innerHTML = ""; 
+    tbody.innerHTML = "";
     const today = new Date();
+    let date = 1;
 
-    for (let i = 0, date = 1; i < 6; i++) {
+    for (let i = 0; i < 6; i++) {
         let row = document.createElement('tr');
         for (let j = 0; j < 7; j++) {
             let cell = document.createElement('td');
             if (i === 0 && j < firstDay || date > lastDate) {
                 cell.innerText = "";
             } else {
-                cell.innerText = date;
-                const fullDate = `${year}-${month + 1}-${date}`;
-                
-                if (date === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                    cell.classList.add('today');
-                    if(!selectedFullDate) selectDate(cell, fullDate);
-                }
-                
+                let d = date;
+                cell.innerText = d;
+                let fullDate = `${year}-${month + 1}-${d}`;
+                if (d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) cell.classList.add('today');
                 if (localStorage.getItem(fullDate)) cell.classList.add('has-event');
-                
                 cell.onclick = () => selectDate(cell, fullDate);
                 date++;
             }
@@ -57,156 +63,86 @@ function selectDate(element, fullDate) {
     document.querySelectorAll('#calendar-body td').forEach(td => td.classList.remove('selected'));
     element.classList.add('selected');
     selectedFullDate = fullDate;
-    const parts = fullDate.split('-');
-    document.getElementById('selected-date-label').innerText = `${parts[1]}月${parts[2]}日の予定：`;
+    document.getElementById('selected-date-label').innerText = fullDate + " の予定";
     document.getElementById('event-input').value = localStorage.getItem(fullDate) || "";
 }
 
 function saveEvent() {
     if (!selectedFullDate) return;
-    const text = document.getElementById('event-input').value;
-    if (text) localStorage.setItem(selectedFullDate, text);
+    const val = document.getElementById('event-input').value;
+    if (val) localStorage.setItem(selectedFullDate, val);
     else localStorage.removeItem(selectedFullDate);
-    updateCalendarDots();
-}
-
-function updateCalendarDots() {
-    const year = displayDate.getFullYear();
-    const month = displayDate.getMonth();
-    const cells = document.querySelectorAll('#calendar-body td');
-    cells.forEach(cell => {
-        if(cell.innerText === "") return;
-        const fullDate = `${year}-${month + 1}-${cell.innerText}`;
-        if (localStorage.getItem(fullDate)) cell.classList.add('has-event');
-        else cell.classList.remove('has-event');
-    });
+    createCalendar();
 }
 
 function changeMonth(diff) {
     displayDate.setMonth(displayDate.getMonth() + diff);
-    selectedFullDate = ""; 
     createCalendar();
-    document.getElementById('event-input').value = "";
-    document.getElementById('selected-date-label').innerText = "日付を選択してください";
 }
 
 // ネタ帳
 let ideaPages = JSON.parse(localStorage.getItem('idea-pages')) || [{title: "ページ1", content: ""}];
-let currentPageIndex = JSON.parse(localStorage.getItem('current-page-index')) || 0;
+let currentPageIndex = 0;
 
 function initIdeas() {
-    const tabBar = document.getElementById('tab-bar');
-    tabBar.innerHTML = "";
-    ideaPages.forEach((page, index) => {
-        const btn = document.createElement('button');
-        btn.innerText = page.title;
-        btn.style.backgroundColor = (index === currentPageIndex) ? "var(--accent)" : "#444";
-        btn.style.color = "white";
-        btn.style.borderRadius = "15px";
-        btn.style.padding = "5px 15px";
-        btn.style.border = "none";
-        btn.onclick = () => switchPage(index);
-        btn.ondblclick = () => renamePage(index);
-        btn.oncontextmenu = (e) => { e.preventDefault(); renamePage(index); };
-        tabBar.appendChild(btn);
+    const bar = document.getElementById('tab-bar');
+    bar.innerHTML = "";
+    ideaPages.forEach((p, i) => {
+        const b = document.createElement('button');
+        b.innerText = p.title;
+        b.className = "nav-btn";
+        b.style.background = (i === currentPageIndex) ? "var(--accent)" : "#444";
+        b.onclick = () => { currentPageIndex = i; initIdeas(); };
+        b.ondblclick = () => {
+            const n = prompt("名前変更", p.title);
+            if(n) { p.title = n; saveIdeas(); initIdeas(); }
+        };
+        bar.appendChild(b);
     });
     document.getElementById('idea-note').value = ideaPages[currentPageIndex].content;
 }
 
-function switchPage(index) {
-    currentPageIndex = index;
-    initIdeas();
-    localStorage.setItem('current-page-index', currentPageIndex);
-}
-
 function createNewPage() {
-    const newTitle = prompt("ページ名を入力してください", `ページ${ideaPages.length + 1}`);
-    if (newTitle) {
-        ideaPages.push({title: newTitle, content: ""});
-        currentPageIndex = ideaPages.length - 1;
-        saveAllIdeas();
-        initIdeas();
-    }
+    const n = prompt("ページ名", "新ページ");
+    if(n) { ideaPages.push({title: n, content: ""}); currentPageIndex = ideaPages.length - 1; saveIdeas(); initIdeas(); }
 }
 
 function saveCurrentIdea() {
     ideaPages[currentPageIndex].content = document.getElementById('idea-note').value;
-    saveAllIdeas();
+    saveIdeas();
 }
 
-function saveAllIdeas() {
-    localStorage.setItem('idea-pages', JSON.stringify(ideaPages));
-    localStorage.setItem('current-page-index', currentPageIndex);
-}
-
-function renamePage(index) {
-    const currentTitle = ideaPages[index].title;
-    const newTitle = prompt("新しい名前を入力（空にすると削除）", currentTitle);
-    if (newTitle === null) return;
-    if (newTitle.trim() === "") {
-        if (confirm("このページを削除しますか？")) {
-            ideaPages.splice(index, 1);
-            if (ideaPages.length === 0) ideaPages = [{title: "ページ1", content: ""}];
-            currentPageIndex = 0;
-            saveAllIdeas();
-            initIdeas();
-        }
-    } else {
-        ideaPages[index].title = newTitle;
-        saveAllIdeas();
-        initIdeas();
-    }
-}
+function saveIdeas() { localStorage.setItem('idea-pages', JSON.stringify(ideaPages)); }
 
 // 付箋
-let stickyNotes = JSON.parse(localStorage.getItem('sticky-notes')) || [];
-
-function initStickyNotes() {
-    const container = document.getElementById('sticky-container');
-    container.innerHTML = "";
-    stickyNotes.forEach((note, index) => {
-        const div = document.createElement('div');
-        div.className = 'sticky-note';
-        div.style.backgroundColor = note.color;
-        div.style.width = note.size;
-        div.style.height = note.size;
-        div.innerHTML = `
-            <span class="delete-note" onclick="deleteStickyNote(${index})">✖</span>
-            <textarea oninput="updateStickyNote(${index}, this.value)">${note.content}</textarea>
-        `;
-        container.appendChild(div);
+let stickies = JSON.parse(localStorage.getItem('sticky-notes')) || [];
+function initStickies() {
+    const c = document.getElementById('sticky-container');
+    c.innerHTML = "";
+    stickies.forEach((n, i) => {
+        const d = document.createElement('div');
+        d.className = 'sticky-note';
+        d.style.backgroundColor = n.color;
+        d.style.width = "100px"; d.style.height = "100px";
+        d.innerHTML = `<textarea oninput="updateSticky(${i}, this.value)">${n.content}</textarea><span style="position:absolute;top:0;right:5px;" onclick="delSticky(${i})">×</span>`;
+        c.appendChild(d);
     });
 }
-
 function addStickyNote() {
-    const color = document.getElementById('note-color').value;
-    const size = document.getElementById('note-size').value;
-    stickyNotes.push({ color, size, content: "" });
-    saveStickyNotes();
-    initStickyNotes();
+    stickies.push({color: document.getElementById('note-color').value, content: ""});
+    localStorage.setItem('sticky-notes', JSON.stringify(stickies));
+    initStickies();
 }
+function updateSticky(i, v) { stickies[i].content = v; localStorage.setItem('sticky-notes', JSON.stringify(stickies)); }
+function delSticky(i) { stickies.splice(i,1); localStorage.setItem('sticky-notes', JSON.stringify(stickies)); initStickies(); }
 
-function updateStickyNote(index, value) {
-    stickyNotes[index].content = value;
-    saveStickyNotes();
-}
+function saveDailyMemo() { localStorage.setItem('daily-memo', document.getElementById('daily-memo').value); }
 
-function deleteStickyNote(index) {
-    if (confirm("この付箋を剥がしますか？")) {
-        stickyNotes.splice(index, 1);
-        saveStickyNotes();
-        initStickyNotes();
-    }
-}
-
-function saveStickyNotes() {
-    localStorage.setItem('sticky-notes', JSON.stringify(stickyNotes));
-}
-
-// 初期起動
-setInterval(updateDisplay, 1000);
-updateDisplay();
+// 初期化
+setInterval(updateClock, 1000);
+updateClock();
 createCalendar();
-loadDailyMemo();
 initIdeas();
-initStickyNotes();
+initStickies();
+updateHomeTodayEvent();
+document.getElementById('daily-memo').value = localStorage.getItem('daily-memo') || "";

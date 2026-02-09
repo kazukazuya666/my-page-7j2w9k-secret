@@ -1,114 +1,61 @@
-:root { 
-    --main-bg: #1a1a1a; 
-    --card-bg: #2d2d2d; 
-    --text: #ffffff; 
-    --accent: #00adb5; 
-    --today: #ff2e63; 
-}
+:root { --main-bg: #1a1a1a; --card-bg: #2d2d2d; --text: #ffffff; --accent: #00adb5; --today: #ff2e63; }
+body { background: var(--main-bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 20px; padding-bottom: 90px; }
 
-body { 
-    background: var(--main-bg); 
-    color: var(--text); 
-    font-family: sans-serif; 
-    margin: 0; 
-    padding: 20px; 
-    padding-bottom: 100px; 
-}
+.header { text-align: center; margin-bottom: 20px; }
+#date { font-size: 1.1rem; color: #aaa; }
+#clock { font-size: 2.2rem; font-weight: bold; color: var(--accent); font-family: monospace; }
 
-.header { text-align: center; margin-bottom: 30px; }
-#date { font-size: 1.2rem; color: #aaa; margin-bottom: 5px; }
-#clock { font-size: 2.5rem; font-weight: bold; color: var(--accent); font-family: monospace; }
+.section { background: var(--card-bg); border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+h2 { margin-top: 0; font-size: 1rem; border-left: 4px solid var(--accent); padding-left: 10px; margin-bottom: 12px; }
 
-.section { 
-    background: var(--card-bg); 
-    border-radius: 15px; 
-    padding: 20px; 
-    margin-bottom: 20px; 
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
-}
+/* ページ切り替えの仕組み */
+.page-content { display: none; }
+.page-content.active { display: block; animation: fadeIn 0.3s; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-h2 { 
-    margin-top: 0; 
-    font-size: 1.1rem; 
-    border-left: 4px solid var(--accent); 
-    padding-left: 10px; 
-    margin-bottom: 15px; 
-}
+/* タブメニュー */
+.tab-menu { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: #252525; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #444; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
+.tab-menu button { background: none; border: none; color: #888; font-size: 10px; padding: 10px; width: 25%; }
+.tab-menu button:focus { color: var(--accent); }
 
-.calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-.nav-btn { background: #3d3d3d; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; }
-
-.calendar-table { width: 100%; border-collapse: collapse; text-align: center; }
-.calendar-table th { color: #aaa; font-size: 0.8rem; padding-bottom: 10px; }
-.calendar-table td { padding: 10px 0; cursor: pointer; border-radius: 8px; position: relative; }
-.calendar-table td:hover { background: #444; }
-.calendar-table td.today { background: var(--today); color: white; font-weight: bold; }
+/* カレンダー関連 */
+.calendar-table { width: 100%; text-align: center; }
+.calendar-table td { padding: 12px 0; border-radius: 8px; cursor: pointer; }
+.calendar-table td.today { background: var(--today); color: white; }
 .calendar-table td.selected { border: 2px solid var(--accent); }
-
-.has-event::after { 
-    content: ''; 
-    position: absolute; 
-    bottom: 4px; 
-    left: 50%; 
-    transform: translateX(-50%); 
-    width: 6px; 
-    height: 6px; 
-    background: var(--accent); 
-    border-radius: 50%; 
-}
-
-textarea { 
-    width: 100%; 
-    background: #3d3d3d; 
-    border: 1px solid var(--accent); 
-    color: white; 
-    border-radius: 10px; 
-    padding: 10px; 
-    box-sizing: border-box; 
-    font-size: 1rem; 
-    outline: none; 
-}
-
-#selected-date-label { font-size: 0.9rem; color: var(--accent); margin-top: 10px; display: block; height: 1.2rem; }
+.has-event::after { content: ''; display: block; width: 5px; height: 5px; background: var(--accent); border-radius: 50%; margin: 2px auto 0; }
 
 .link-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.btn { 
-    background: #3d3d3d; 
-    color: white; 
-    text-decoration: none; 
-    padding: 15px; 
-    border-radius: 10px; 
-    text-align: center; 
-    font-size: 0.9rem; 
-}
+.btn { background: #3d3d3d; color: white; text-decoration: none; padding: 12px; border-radius: 10px; text-align: center; font-size: 0.8rem; }
+textarea { width: 100%; background: #3d3d3d; border: 1px solid var(--accent); color: white; border-radius: 10px; padding: 10px; box-sizing: border-box; outline: none; }
 
-.sticky-note {
-    padding: 10px;
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-    color: #333;
-    position: relative;
-    border-top: 1px solid rgba(0,0,0,0.05);
+.sticky-note { padding: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); color: #333; position: relative; margin-bottom: 5px; }
+.sticky-note textarea { background: transparent !important; border: none !important; color: #333 !important; }
+
+.calendar-header {
     display: flex;
-    flex-direction: column;
+    justify-content: center; /* 中央に寄せる */
+    align-items: center;     /* 上下の中央を揃える */
+    gap: 20px;               /* ボタンと月の間の隙間 */
+    margin-bottom: 15px;
 }
 
-.sticky-note textarea {
-    background: transparent !important;
-    border: none !important;
-    resize: none;
-    width: 100%;
-    height: 100%;
-    font-family: inherit;
-    outline: none;
-    color: #333 !important; /* 付箋の中は黒文字で見やすく */
+/* 月の文字が改行されないようにする */
+#calendar-month {
+    margin: 0;
+    font-size: 1.1rem;
+    white-space: nowrap; /* 1行に強制する */
+    border: none;        /* もし枠線が邪魔なら消す */
+    padding: 0;
 }
 
-.delete-note {
-    position: absolute;
-    top: 2px;
-    right: 2px;
+/* 前後ボタンのサイズ調整 */
+.nav-btn {
+    background: #3d3d3d;
+    color: white;
+    border: none;
+    padding: 5px 15px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 12px;
-    color: #666;
+    font-size: 1rem;
 }
-
