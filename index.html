@@ -15,6 +15,12 @@
     </div>
 
     <div class="section">
+        <h2>今日のメモ</h2>
+        <textarea id="daily-memo" rows="4" placeholder="ここにやることを書く..." oninput="saveDailyMemo()"></textarea>
+    </div>
+
+
+    <div class="section">
         <h2>クイックリンク</h2>
         <div class="link-grid">
             <a href="https://www.google.com" class="btn" target="_blank">Google</a>
@@ -24,34 +30,6 @@
             <a href="https://webclass.nagoya-bunri.ac.jp/webclass/login.php" class="btn">webclass</a>
             <a href="https://www.nagoya-bunri.ac.jp/for_students/" class="btn">学生ページ</a>
         </div>
-    </div>
-
-    <div class="section">
-        <h2>ネタ帳</h2>
-        <div id="tab-bar" style="display: flex; gap: 5px; overflow-x: auto; margin-bottom: 10px;"></div>
-        <textarea id="idea-note" rows="5" oninput="saveCurrentIdea()"></textarea>
-        <button onclick="createNewPage()" style="margin-top:10px;">＋ 新しいページ</button>
-    </div>
-
-    <div class="section">
-        <h2>今日のメモ</h2>
-        <textarea id="daily-memo" rows="4" placeholder="ここにやることを書く..." oninput="saveDailyMemo()"></textarea>
-    </div>
-
-    <div class="section">
-        <div class="calendar-header">
-            <button class="nav-btn" onclick="changeMonth(-1)">◀</button>
-            <h2 id="calendar-month">2026年 2月</h2>
-            <button class="nav-btn" onclick="changeMonth(1)">▶</button>
-        </div>
-        <table class="calendar-table">
-            <thead>
-                <tr><th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th></tr>
-            </thead>
-            <tbody id="calendar-body"></tbody>
-        </table>
-        <span id="selected-date-label">日付を選択してください</span>
-        <textarea id="event-input" rows="2" placeholder="予定をメモ..." oninput="saveEvent()"></textarea>
     </div>
 
     <div class="section">
@@ -70,6 +48,31 @@
             <button onclick="addStickyNote()">＋ 貼る</button>
         </div>
         <div id="sticky-container" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+    </div>
+
+
+    <div class="section">
+        <h2>ネタ帳</h2>
+        <div id="tab-bar" style="display: flex; gap: 5px; overflow-x: auto; margin-bottom: 10px;"></div>
+        <textarea id="idea-note" rows="5" oninput="saveCurrentIdea()"></textarea>
+        <button onclick="createNewPage()" style="margin-top:10px;">＋ 新しいページ</button>
+    </div>
+
+    
+    <div class="section">
+        <div class="calendar-header">
+            <button class="nav-btn" onclick="changeMonth(-1)">◀</button>
+            <h2 id="calendar-month">2026年 2月</h2>
+            <button class="nav-btn" onclick="changeMonth(1)">▶</button>
+        </div>
+        <table class="calendar-table">
+            <thead>
+                <tr><th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th></tr>
+            </thead>
+            <tbody id="calendar-body"></tbody>
+        </table>
+        <span id="selected-date-label">日付を選択してください</span>
+        <textarea id="event-input" rows="2" placeholder="予定をメモ..." oninput="saveEvent()"></textarea>
     </div>
 
     <script src="script.js"></script>
