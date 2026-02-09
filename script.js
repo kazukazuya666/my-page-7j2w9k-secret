@@ -89,9 +89,18 @@ function initIdeas() {
     bar.innerHTML = "";
     ideaPages.forEach((p, i) => {
         const b = document.createElement('button');
-        b.innerText = p.title;
-        b.className = "nav-btn";
-        b.style.background = (i === currentPageIndex) ? "var(--accent)" : "#444";
+                b.innerText = p.title;
+        // デザインを直接指定して丸くする
+        b.style.backgroundColor = (i === currentPageIndex) ? "var(--accent)" : "#444";
+        b.style.color = "white";
+        b.style.borderRadius = "20px"; // ★これで丸くなります
+        b.style.padding = "8px 16px";
+        b.style.border = "none";
+        b.style.marginRight = "8px";
+        b.style.fontSize = "14px";
+        b.style.whiteSpace = "nowrap"; 
+        b.style.cursor = "pointer";
+
         b.onclick = () => { currentPageIndex = i; initIdeas(); };
         b.ondblclick = () => {
             const n = prompt("名前変更", p.title);
@@ -146,3 +155,19 @@ initIdeas();
 initStickies();
 updateHomeTodayEvent();
 document.getElementById('daily-memo').value = localStorage.getItem('daily-memo') || "";
+
+// これがないと、最初に開いた時に何も表示されません
+showPage('home');
+
+function saveEvent() {
+    if (!selectedFullDate) return;
+    const val = document.getElementById('event-input').value;
+    if (val) {
+        localStorage.setItem(selectedFullDate, val);
+    } else {
+        localStorage.removeItem(selectedFullDate);
+    }
+    
+    createCalendar(); // カレンダーのドットを更新
+    updateHomeTodayEvent(); // ★これでホーム画面の「今日の予定」が即座に変わります！
+}
