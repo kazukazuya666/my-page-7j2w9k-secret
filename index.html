@@ -1,12 +1,3 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Life Dashboard</title>
-    <meta name="robots" content="noindex,nofollow">
-    <link rel="stylesheet" href="style.css">
-</head>
 <body>
 
     <div class="header">
@@ -19,37 +10,12 @@
         <textarea id="daily-memo" rows="4" placeholder="ここにやることを書く..." oninput="saveDailyMemo()"></textarea>
     </div>
 
-
     <div class="section">
         <h2>クイックリンク</h2>
         <div class="link-grid">
             <a href="https://www.google.com" class="btn" target="_blank">Google</a>
-            <a href="https://tv.dmm.com/vod/" class="btn" target="_blank">dmm</a>
-            <a href="https://www.youtube.com/" class="btn" >youtube</a>
-            <a href="https://unipa.nagoya-bunri.ac.jp/uprx/up/pk/pky501/Pky50101.xhtml" class="btn">大学ポータル</a>
-            <a href="https://webclass.nagoya-bunri.ac.jp/webclass/login.php" class="btn">webclass</a>
-            <a href="https://www.nagoya-bunri.ac.jp/for_students/" class="btn">学生ページ</a>
-        </div>
+            </div>
     </div>
-
-    <div class="section">
-        <h2>付箋 (Sticky Notes)</h2>
-        <div style="margin-bottom: 10px;">
-            <select id="note-color">
-                <option value="#fff9c4">黄色</option>
-                <option value="#ffcdd2">ピンク</option>
-                <option value="#bbdefb">青</option>
-            </select>
-            <select id="note-size">
-                <option value="100px">小</option>
-                <option value="150px">中</option>
-                <option value="200px">大</option>
-            </select>
-            <button onclick="addStickyNote()">＋ 貼る</button>
-        </div>
-        <div id="sticky-container" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
-    </div>
-
 
     <div class="section">
         <h2>ネタ帳</h2>
@@ -58,23 +24,17 @@
         <button onclick="createNewPage()" style="margin-top:10px;">＋ 新しいページ</button>
     </div>
 
-    
+    <div class="section">
+        <h2>付箋 (Sticky Notes)</h2>
+        </div>
+
     <div class="section">
         <div class="calendar-header">
             <button class="nav-btn" onclick="changeMonth(-1)">◀</button>
             <h2 id="calendar-month">2026年 2月</h2>
             <button class="nav-btn" onclick="changeMonth(1)">▶</button>
         </div>
-        <table class="calendar-table">
-            <thead>
-                <tr><th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th></tr>
-            </thead>
-            <tbody id="calendar-body"></tbody>
-        </table>
-        <span id="selected-date-label">日付を選択してください</span>
-        <textarea id="event-input" rows="2" placeholder="予定をメモ..." oninput="saveEvent()"></textarea>
-    </div>
+        </div>
 
     <script src="script.js"></script>
 </body>
-</html>
