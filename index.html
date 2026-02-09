@@ -287,6 +287,53 @@ function renamePage(index) {
     }
 }
 
+let stickyNotes = JSON.parse(localStorage.getItem('sticky-notes')) || [];
+
+function initStickyNotes() {
+    const container = document.getElementById('sticky-container');
+    container.innerHTML = "";
+    stickyNotes.forEach((note, index) => {
+        const div = document.createElement('div');
+        div.className = 'sticky-note';
+        div.style.backgroundColor = note.color;
+        div.style.width = note.size;
+        div.style.height = note.size;
+
+        div.innerHTML = `
+            <span class="delete-note" onclick="deleteStickyNote(${index})">✖</span>
+            <textarea oninput="updateStickyNote(${index}, this.value)">${note.content}</textarea>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function addStickyNote() {
+    const color = document.getElementById('note-color').value;
+    const size = document.getElementById('note-size').value;
+    stickyNotes.push({ color, size, content: "" });
+    saveStickyNotes();
+    initStickyNotes();
+}
+
+function updateStickyNote(index, value) {
+    stickyNotes[index].content = value;
+    saveStickyNotes();
+}
+
+function deleteStickyNote(index) {
+    if (confirm("この付箋を剥がしますか？")) {
+        stickyNotes.splice(index, 1);
+        saveStickyNotes();
+        initStickyNotes();
+    }
+}
+
+function saveStickyNotes() {
+    localStorage.setItem('sticky-notes', JSON.stringify(stickyNotes));
+}
+
+// 起動時に呼び出し
+initStickyNotes();
 
 
     </script>
