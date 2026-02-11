@@ -49,7 +49,14 @@
     
     <div style="display: flex; gap: 5px; margin-bottom: 12px;">
         <input type="text" id="todo-input" placeholder="新しい項目を追加..." style="flex: 1; background: #3d3d3d; border: 1px solid var(--accent); color: white; border-radius: 10px; padding: 10px; outline: none;">
-        <button onclick="addTodoItem()" class="nav-btn" style="border-radius: 10px; padding: 0 15px;">＋</button>
+        <button 
+            onclick="addTodoItem()" 
+            ontouchstart="addTodoItem(); event.preventDefault();" 
+            class="nav-btn" 
+            style="border-radius: 10px; padding: 0 15px;">
+            ＋
+        </button>
+
     </div>
 
     <div class="filter-bar" style="display: flex; gap: 5px; margin-bottom: 12px;">

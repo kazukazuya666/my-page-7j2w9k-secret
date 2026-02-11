@@ -296,24 +296,25 @@ function renderTodoList() {
 
 function addTodoItem() {
     const input = document.getElementById('todo-input');
-    
-    // スマホでの空振り防止
-    if (!input) {
-        console.error("todo-inputが見つかりません");
-        return;
-    }
-    
-    const text = input.value.trim();
-    if (!text) return;
+    if (!input) return;
 
-    todoData[currentTodoCategoryIndex].items.push({text: text, done: false});
+    const val = input.value.trim();
+    if (val === "") return;
+
+    // 現在のカテゴリーにデータを追加
+    todoData[currentTodoCategoryIndex].items.push({text: val, done: false});
+    
+    // 入力欄を空にする
     input.value = "";
+    
+    // 保存と再描画
     saveTodo();
     renderTodoList();
     
-    // キーボードを閉じる（スマホ用）
-    input.blur();
+    // 【重要】スマホのキーボードを強制的に閉じる（これで画面を更新させる）
+    input.blur(); 
 }
+
 
 
 function toggleTodo(index) {
