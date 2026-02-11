@@ -14,9 +14,24 @@ h2 { margin-top: 0; font-size: 1rem; border-left: 4px solid var(--accent); paddi
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* タブメニュー */
-.tab-menu { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: #252525; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #444; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
+.tab-menu {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: #222;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    /* --- ここが重要 --- */
+    padding-bottom: calc(10px + env(safe-area-inset-bottom)); 
+    border-top: 1px solid #444;
+    z-index: 1000;
+}
+
 .tab-menu button { background: none; border: none; color: #888; font-size: 10px; padding: 10px; width: 25%; }
 .tab-menu button:focus { color: var(--accent); }
+
 
 /* カレンダー関連 */
 .calendar-table { width: 100%; text-align: center; }
