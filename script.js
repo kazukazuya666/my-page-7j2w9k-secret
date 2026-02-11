@@ -171,3 +171,118 @@ function saveEvent() {
     createCalendar(); // カレンダーのドットを更新
     updateHomeTodayEvent(); // ★これでホーム画面の「今日の予定」が即座に変わります！
 }
+
+// --- ToDo機能の追加 ---
+let todoData = JSON.parse(localStorage.getItem('todo-data')) || [{category: "映画", items: []}];
+let currentTodoCategoryIndex = 0;
+let currentTodoFilter = 'all';
+
+function initTodo() {
+    const bar = document.getElementById('todo-category-bar');
+    if (!bar) return;
+    bar.innerHTML = "";
+    todoData.forEach((cat, i) => {
+        const b = document.createElement('button');
+        b.innerText = cat.category;
+        b.style.backgroundColor = (i === currentTodoCategoryIndex) ? "var(--accent)" : "#444";
+        b.style.color = "white";
+        b.style.borderRadius = "15px";
+        b.style.padding = "5px 12px";
+        b.style.border = "none";
+        b.style.marginRight = "5px";
+        b.style.fontSize = "0.8rem";
+        b.style.whiteSpace = "nowrap";
+        b.onclick = () => { currentTodoCategoryIndex = i; initTodo(); };
+        bar.appendChild(b);
+                b.style.fontSize = "0.8rem";
+        b.style.whiteSpace = "nowrap";
+        
+        // --- ここから書き換え・追加 ---
+        // 1. 普通に押した時の切り替え
+        b.onclick = () => { currentTodoCategoryIndex = i; initTodo(); };
+
+        // 2. 長押しやダブルクリックで削除する機能
+        const deleteCat = (e) => {
+            e.preventDefault(); 
+            if (todoData.length <= 1) {
+                alert("最後の1つは削除できません");
+                return;
+            }
+            if (confirm(`「${cat.category}」を削除しますか？\n中身のリストも消えます。`)) {
+                todoData.splice(i, 1);
+                currentTodoCategoryIndex = 0; 
+                saveTodo();
+                initTodo();
+            }
+        };
+        
+        b.ondblclick = deleteCat;   // PC用：ダブルクリック
+        b.oncontextmenu = deleteCat; // スマホ用：長押し
+        // --- ここまで ---
+
+        bar.appendChild(b);
+
+    });
+    renderTodoList();
+}
+
+function renderTodoList() {
+    const container = document.getElementById('todo-list-container');
+    if (!container) return;
+    container.innerHTML = "";
+    const items = todoData[currentTodoCategoryIndex].items;
+    items.forEach((item, index) => {
+        if (currentTodoFilter === 'active' && item.done) return;
+        if (currentTodoFilter === 'completed' && !item.done) return;
+        const div = document.createElement('div');
+        div.className = `todo-item ${item.done ? 'completed' : ''}`;
+        div.innerHTML = `<input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleTodo(${index})"><span>${item.text}</span><button onclick="deleteTodo(${index})" style="background:none; border:none; color:#ff2e63; font-size:1.2rem;">×</button>`;
+        container.appendChild(div);
+    });
+}
+
+function addTodoItem() {
+    const input = document.getElementById('todo-input');
+    if (!input || !input.value) return;
+    todoData[currentTodoCategoryIndex].items.push({text: input.value, done: false});
+    input.value = "";
+    saveTodo();
+    renderTodoList();
+}
+
+function toggleTodo(index) {
+    todoData[currentTodoCategoryIndex].items[index].done = !todoData[currentTodoCategoryIndex].items[index].done;
+    saveTodo();
+    renderTodoList();
+}
+
+function deleteTodo(index) {
+    if(confirm("削除しますか？")) {
+        todoData[currentTodoCategoryIndex].items.splice(index, 1);
+        saveTodo();
+        renderTodoList();
+    }
+}
+
+function setTodoFilter(filter) {
+    currentTodoFilter = filter;
+    document.getElementById('f-all').classList.toggle('active', filter === 'all');
+    document.getElementById('f-active').classList.toggle('active', filter === 'active');
+    document.getElementById('f-completed').classList.toggle('active', filter === 'completed');
+    renderTodoList();
+}
+
+function createTodoCategory() {
+    const n = prompt("新しいカテゴリー名", "");
+    if(n) {
+        todoData.push({category: n, items: []});
+        currentTodoCategoryIndex = todoData.length - 1;
+        saveTodo();
+        initTodo();
+    }
+}
+
+function saveTodo() { localStorage.setItem('todo-data', JSON.stringify(todoData)); }
+
+// 最初に動かす
+initTodo();

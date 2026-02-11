@@ -49,3 +49,28 @@ textarea { width: 100%; background: #3d3d3d; border: 1px solid var(--accent); co
     padding: 0;
 }
 
+/* ToDoアイテムのデザイン */
+.todo-item {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    border: 1px solid #444;
+}
+.todo-item.completed { opacity: 0.5; background: #252525; }
+.todo-item span { flex: 1; margin-left: 10px; font-size: 0.9rem; }
+.todo-item.completed span { text-decoration: line-through; }
+
+/* フィルターボタンのデザイン */
+.filter-btn {
+    flex: 1;
+    background: #3d3d3d;
+    color: #888;
+    border: none;
+    padding: 6px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+}
+.filter-btn.active { background: var(--accent); color: white; }

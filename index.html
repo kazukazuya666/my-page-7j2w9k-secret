@@ -39,6 +39,26 @@
                 <a href="https://www.nagoya-bunri.ac.jp/for_students/" class="btn">学生ページ</a>
             </div>
         </div>
+        <div class="section">
+    <h2>✅ ToDo・コレクション</h2>
+    <div id="todo-category-bar" style="display: flex; gap: 5px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 5px;"></div>
+    
+    <div style="display: flex; gap: 5px; margin-bottom: 12px;">
+        <input type="text" id="todo-input" placeholder="新しい項目を追加..." style="flex: 1; background: #3d3d3d; border: 1px solid var(--accent); color: white; border-radius: 10px; padding: 10px; outline: none;">
+        <button onclick="addTodoItem()" class="nav-btn" style="border-radius: 10px; padding: 0 15px;">＋</button>
+    </div>
+
+    <div class="filter-bar" style="display: flex; gap: 5px; margin-bottom: 12px;">
+        <button onclick="setTodoFilter('all')" class="filter-btn active" id="f-all">全部</button>
+        <button onclick="setTodoFilter('active')" class="filter-btn" id="f-active">未達成</button>
+        <button onclick="setTodoFilter('completed')" class="filter-btn" id="f-completed">達成済</button>
+    </div>
+
+    <div id="todo-list-container"></div>
+    
+        <button onclick="createTodoCategory()" style="margin-top:15px; font-size: 0.8rem; background: none; border: 1px dashed var(--accent); color: var(--accent); width: 100%; padding: 8px; border-radius: 10px;">＋ カテゴリーを増やす</button>
+    </div>
+
     </div>
 
     <div id="notes" class="page-content">
