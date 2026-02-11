@@ -181,65 +181,85 @@ function initTodo() {
     const bar = document.getElementById('todo-category-bar');
     if (!bar) return;
     bar.innerHTML = "";
-    todoData.forEach((cat, i) => {
-        const b = document.createElement('button');
-        b.innerText = cat.category;
-        b.style.backgroundColor = (i === currentTodoCategoryIndex) ? "var(--accent)" : "#444";
-        b.style.color = "white";
-        b.style.borderRadius = "15px";
-        b.style.padding = "5px 12px";
-        b.style.border = "none";
-        b.style.marginRight = "5px";
-        b.style.fontSize = "0.8rem";
-        b.style.whiteSpace = "nowrap";
-        b.onclick = () => { currentTodoCategoryIndex = i; initTodo(); };
-        bar.appendChild(b);
-                b.style.fontSize = "0.8rem";
-        b.style.whiteSpace = "nowrap";
-        
-        // --- ここから書き換え・追加 ---
-        // 1. 普通に押した時の切り替え
-        b.onclick = () => { currentTodoCategoryIndex = i; initTodo(); };
 
-        // 2. 長押しやダブルクリックで削除する機能
-        const deleteCat = (e) => {
-            e.preventDefault(); 
+    todoData.forEach((cat, i) => {
+        const group = document.createElement('div');
+        group.style.display = "inline-flex";
+        group.style.alignItems = "center";
+        group.style.background = (i === currentTodoCategoryIndex) ? "var(--accent)" : "#444";
+        group.style.borderRadius = "20px";
+        group.style.marginRight = "8px";
+        group.style.padding = "2px 10px";
+
+        // カテゴリー名（タップで切り替え）
+        const nameBtn = document.createElement('span');
+        nameBtn.innerText = cat.category;
+        nameBtn.style.color = "white";
+        nameBtn.style.fontSize = "0.8rem";
+        nameBtn.style.padding = "5px 0";
+        nameBtn.style.cursor = "pointer";
+        nameBtn.onclick = () => { 
+            currentTodoCategoryIndex = i; 
+            initTodo(); 
+        };
+
+        // カテゴリー削除ボタン（小さな「×」）
+        const delBtn = document.createElement('span');
+        delBtn.innerText = "×";
+        delBtn.style.marginLeft = "8px";
+        delBtn.style.color = "rgba(255,255,255,0.6)";
+        delBtn.style.fontSize = "1.2rem";
+        delBtn.style.cursor = "pointer";
+        delBtn.onclick = (e) => {
+            e.stopPropagation(); // 切り替えイベントを邪魔しない
             if (todoData.length <= 1) {
                 alert("最後の1つは削除できません");
                 return;
             }
-            if (confirm(`「${cat.category}」を削除しますか？\n中身のリストも消えます。`)) {
+            if (confirm(`カテゴリー「${cat.category}」を削除しますか？`)) {
                 todoData.splice(i, 1);
-                currentTodoCategoryIndex = 0; 
+                currentTodoCategoryIndex = 0;
                 saveTodo();
                 initTodo();
             }
         };
-        
-        b.ondblclick = deleteCat;   // PC用：ダブルクリック
-        b.oncontextmenu = deleteCat; // スマホ用：長押し
-        // --- ここまで ---
 
-        bar.appendChild(b);
-
+        group.appendChild(nameBtn);
+        group.appendChild(delBtn);
+        bar.appendChild(group);
     });
+    
     renderTodoList();
 }
+
+
 
 function renderTodoList() {
     const container = document.getElementById('todo-list-container');
     if (!container) return;
     container.innerHTML = "";
     const items = todoData[currentTodoCategoryIndex].items;
+
     items.forEach((item, index) => {
         if (currentTodoFilter === 'active' && item.done) return;
         if (currentTodoFilter === 'completed' && !item.done) return;
+
         const div = document.createElement('div');
         div.className = `todo-item ${item.done ? 'completed' : ''}`;
-        div.innerHTML = `<input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleTodo(${index})"><span>${item.text}</span><button onclick="deleteTodo(${index})" style="background:none; border:none; color:#ff2e63; font-size:1.2rem;">×</button>`;
+        
+        div.innerHTML = `
+            <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleTodo(${index})">
+            <span>${item.text}</span>
+            <button onclick="deleteTodo(${index})" style="background:none; border:none; color:#ff2e63; font-size:1.5rem; padding:0 10px;">
+                ×
+            </button>
+        `;
         container.appendChild(div);
     });
 }
+
+
+
 
 function addTodoItem() {
     const input = document.getElementById('todo-input');
