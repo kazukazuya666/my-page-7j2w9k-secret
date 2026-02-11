@@ -32,6 +32,55 @@ textarea { width: 100%; background: #3d3d3d; border: 1px solid var(--accent); co
 .sticky-note { padding: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); color: #333; position: relative; margin-bottom: 5px; }
 .sticky-note textarea { background: transparent !important; border: none !important; color: #333 !important; }
 
+/* 1. 基本の日付セル */
+td {
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 8px; /* 角を少し丸くすると今風になります */
+    position: relative; /* ドット（印）を出すための基準 */
+}
+
+/* 2. 「今日」のデザイン（赤系） */
+td.today {
+    background-color: rgba(255, 46, 99, 0.2); /* ほんのり赤 */
+    color: #ff2e63;                          /* 文字を赤く */
+    font-weight: bold;
+}
+
+/* 3. 「予定あり」のデザイン（青・緑系） */
+/* 文字色を変えるだけでなく、下に小さなドットを出すと「今日」と重なっても見やすいです */
+td.has-event {
+    color: var(--accent); /* 予定がある日はメインカラーにする */
+}
+
+td.has-event::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    background-color: var(--accent); /* 小さなドットを表示 */
+    border-radius: 50%;
+}
+
+/* 4. 「今日」かつ「予定あり」の重なり設定 */
+/* ここが重要！重なっても両方の特徴が出るようにします */
+td.today.has-event {
+    background-color: rgba(255, 46, 99, 0.3); /* 背景は赤を維持 */
+    box-shadow: inset 0 0 0 2px var(--accent); /* 内側に予定ありの色の枠線を出す */
+}
+
+/* 5. 選択中のデザイン */
+td.selected {
+    background-color: var(--accent) !important; /* 強制的にメインカラーにする */
+    color: white !important;
+}
+
+
+
 /* カレンダーのヘッダーを横一列に整列 */
 .calendar-header {
     display: flex;
@@ -74,3 +123,54 @@ textarea { width: 100%; background: #3d3d3d; border: 1px solid var(--accent); co
     font-size: 0.75rem;
 }
 .filter-btn.active { background: var(--accent); color: white; }
+
+
+/* --- 合体ページ（notes-all）用の調整 --- */
+
+/* セクションごとの余白をしっかり取る */
+#notes-all .section {
+    margin-bottom: 30px; 
+    border-bottom: 1px solid #444;
+    padding-bottom: 20px;
+}
+
+/* 付箋が横に並ぶようにする設定 */
+#sticky-container {
+    display: flex;
+    flex-wrap: wrap; /* 横幅がいっぱいになったら折り返す */
+    gap: 15px;      /* 付箋同士の隙間 */
+    margin-top: 10px;
+}
+
+/* 付箋自体のサイズ調整（スマホで見やすく） */
+.sticky-note {
+    position: relative;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    width: 90px !important;  /* サイズを少しコンパクトに */
+    height: 90px !important;
+}
+
+.sticky-note textarea {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    color: #333;
+    font-size: 0.8rem;
+    resize: none;
+    padding: 0;
+    line-height: 1.2;
+}
+
+/* ネタ帳とメモのテキストエリアを使いやすく */
+#idea-note, #daily-memo {
+    width: 100%;
+    background: #222;
+    color: white;
+    border: 1px solid #444;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 0.95rem;
+}

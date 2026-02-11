@@ -61,29 +61,29 @@
 
     </div>
 
-    <div id="notes" class="page-content">
+    <div id="notes-all" class="page-content">
         <div class="section">
-            <h2>ネタ帳</h2>
-            <div id="tab-bar" style="display: flex; gap: 5px; overflow-x: auto; margin-bottom: 10px;"></div>
-            <textarea id="idea-note" rows="10" oninput="saveCurrentIdea()"></textarea>
-            <button onclick="createNewPage()" style="margin-top:10px;">＋ 新しいページ</button>
+            <h2>📝 ネタ帳</h2>
+            <div id="tab-bar" style="display: flex; overflow-x: auto; margin-bottom: 10px; padding-bottom: 5px;"></div>
+            <textarea id="idea-note" oninput="saveCurrentIdea()" placeholder="ここに書き込みます..." style="height: 150px;"></textarea>
+        <button onclick="createNewPage()" class="nav-btn" style="margin-top: 8px; width: 100%;">＋ 新しいページ</button>
+    </div>
+
+    <div class="section">
+        <h2>🗒️ メモ</h2>
+        <textarea id="daily-memo" oninput="saveDailyMemo()" placeholder="ちょっとしたメモに..." style="height: 100px;"></textarea>
+    </div>
+
+    <div class="section">
+        <h2>📌 付箋</h2>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <input type="color" id="note-color" value="#00adb5" style="width: 50px; height: 38px; border: none; background: none;">
+            <button onclick="addStickyNote()" class="nav-btn" style="flex: 1;">付箋を追加</button>
+        </div>
+        <div id="sticky-container" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
         </div>
     </div>
 
-    <div id="stickies" class="page-content">
-        <div class="section">
-            <h2>今日のメモ</h2>
-            <textarea id="daily-memo" rows="4" placeholder="やることを書く..." oninput="saveDailyMemo()"></textarea>
-        </div>
-        <div class="section">
-            <h2>付箋 (Sticky Notes)</h2>
-            <div style="margin-bottom: 10px;">
-                <select id="note-color"><option value="#fff9c4">黄</option><option value="#ffcdd2">赤</option><option value="#bbdefb">青</option></select>
-                <button onclick="addStickyNote()">＋ 貼る</button>
-            </div>
-            <div id="sticky-container" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
-        </div>
-    </div>
 
     <div id="calendar" class="page-content">
         <div class="section">
@@ -103,10 +103,9 @@
 
     <div class="tab-menu">
         <button onclick="showPage('home')">🏠<br>ホーム</button>
-        <button onclick="showPage('notes')">📝<br>ネタ帳</button>
-        <button onclick="showPage('stickies')">📌<br>メモ付箋</button>
-        <button onclick="showPage('calendar')">📅<br>予定表</button>
+        <button onclick="showPage('notes-all')">📒<br>ノート</button> <button onclick="showPage('calendar')">📅<br>予定表</button>
     </div>
+
 
     <script src="script.js" defer></script>
 

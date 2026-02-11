@@ -47,8 +47,23 @@ function createCalendar() {
                 let d = date;
                 cell.innerText = d;
                 let fullDate = `${year}-${month + 1}-${d}`;
-                if (d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) cell.classList.add('today');
-                if (localStorage.getItem(fullDate)) cell.classList.add('has-event');
+                
+                // --- クラス判定の修正 ---
+                // 1. 今日かどうか (赤っぽくなる枠線や背景)
+                if (d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                    cell.classList.add('today');
+                }
+                
+                // 2. 予定があるかどうか (ドットや色)
+                if (localStorage.getItem(fullDate)) {
+                    cell.classList.add('has-event');
+                }
+                
+                // 3. 選択中かどうか
+                if (selectedFullDate === fullDate) {
+                    cell.classList.add('selected');
+                }
+
                 cell.onclick = () => selectDate(cell, fullDate);
                 date++;
             }
@@ -58,6 +73,7 @@ function createCalendar() {
         if (date > lastDate) break;
     }
 }
+
 
 function selectDate(element, fullDate) {
     document.querySelectorAll('#calendar-body td').forEach(td => td.classList.remove('selected'));
@@ -86,14 +102,19 @@ let currentPageIndex = 0;
 
 function initIdeas() {
     const bar = document.getElementById('tab-bar');
+    
+    // エラー防止：もしタブを表示する場所（tab-bar）がなければ、何もしないで終了
+    if (!bar) return; 
+
     bar.innerHTML = "";
     ideaPages.forEach((p, i) => {
         const b = document.createElement('button');
-                b.innerText = p.title;
-        // デザインを直接指定して丸くする
+        b.innerText = p.title;
+        
+        // デザイン設定
         b.style.backgroundColor = (i === currentPageIndex) ? "var(--accent)" : "#444";
         b.style.color = "white";
-        b.style.borderRadius = "20px"; // ★これで丸くなります
+        b.style.borderRadius = "20px";
         b.style.padding = "8px 16px";
         b.style.border = "none";
         b.style.marginRight = "8px";
@@ -101,15 +122,32 @@ function initIdeas() {
         b.style.whiteSpace = "nowrap"; 
         b.style.cursor = "pointer";
 
-        b.onclick = () => { currentPageIndex = i; initIdeas(); };
+        // クリックで切り替え
+        b.onclick = () => { 
+            currentPageIndex = i; 
+            initIdeas(); 
+        };
+
+        // ダブルクリックで名前変更
         b.ondblclick = () => {
             const n = prompt("名前変更", p.title);
-            if(n) { p.title = n; saveIdeas(); initIdeas(); }
+            if(n) { 
+                p.title = n; 
+                saveIdeas(); 
+                initIdeas(); 
+            }
         };
+        
         bar.appendChild(b);
     });
-    document.getElementById('idea-note').value = ideaPages[currentPageIndex].content;
+
+    // ページの内容（テキストエリア）を表示
+    const noteArea = document.getElementById('idea-note');
+    if (noteArea) {
+        noteArea.value = ideaPages[currentPageIndex].content;
+    }
 }
+
 
 function createNewPage() {
     const n = prompt("ページ名", "新ページ");
@@ -147,17 +185,23 @@ function delSticky(i) { stickies.splice(i,1); localStorage.setItem('sticky-notes
 
 function saveDailyMemo() { localStorage.setItem('daily-memo', document.getElementById('daily-memo').value); }
 
-// 初期化
+// --- 初期化の修正 ---
 setInterval(updateClock, 1000);
 updateClock();
 createCalendar();
 initIdeas();
 initStickies();
+initTodo();
 updateHomeTodayEvent();
-document.getElementById('daily-memo').value = localStorage.getItem('daily-memo') || "";
 
-// これがないと、最初に開いた時に何も表示されません
+// メモの読み込み先IDが合っているか確認
+const dailyMemoElem = document.getElementById('daily-memo');
+if (dailyMemoElem) {
+    dailyMemoElem.value = localStorage.getItem('daily-memo') || "";
+}
+
 showPage('home');
+
 
 function saveEvent() {
     if (!selectedFullDate) return;
