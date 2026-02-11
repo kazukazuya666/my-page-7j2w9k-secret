@@ -185,22 +185,7 @@ function delSticky(i) { stickies.splice(i,1); localStorage.setItem('sticky-notes
 
 function saveDailyMemo() { localStorage.setItem('daily-memo', document.getElementById('daily-memo').value); }
 
-// --- 初期化の修正 ---
-setInterval(updateClock, 1000);
-updateClock();
-createCalendar();
-initIdeas();
-initStickies();
-initTodo();
-updateHomeTodayEvent();
 
-// メモの読み込み先IDが合っているか確認
-const dailyMemoElem = document.getElementById('daily-memo');
-if (dailyMemoElem) {
-    dailyMemoElem.value = localStorage.getItem('daily-memo') || "";
-}
-
-showPage('home');
 
 
 function saveEvent() {
@@ -223,8 +208,12 @@ let currentTodoFilter = 'all';
 
 function initTodo() {
     const bar = document.getElementById('todo-category-bar');
-    if (!bar) return;
+    // ↓ これを追加！
+    if (!bar) return; 
+
     bar.innerHTML = "";
+    // ...あとの処理はそのまま
+
 
     todoData.forEach((cat, i) => {
         const group = document.createElement('div');
@@ -307,12 +296,25 @@ function renderTodoList() {
 
 function addTodoItem() {
     const input = document.getElementById('todo-input');
-    if (!input || !input.value) return;
-    todoData[currentTodoCategoryIndex].items.push({text: input.value, done: false});
+    
+    // スマホでの空振り防止
+    if (!input) {
+        console.error("todo-inputが見つかりません");
+        return;
+    }
+    
+    const text = input.value.trim();
+    if (!text) return;
+
+    todoData[currentTodoCategoryIndex].items.push({text: text, done: false});
     input.value = "";
     saveTodo();
     renderTodoList();
+    
+    // キーボードを閉じる（スマホ用）
+    input.blur();
 }
+
 
 function toggleTodo(index) {
     todoData[currentTodoCategoryIndex].items[index].done = !todoData[currentTodoCategoryIndex].items[index].done;
@@ -350,3 +352,21 @@ function saveTodo() { localStorage.setItem('todo-data', JSON.stringify(todoData)
 
 // 最初に動かす
 initTodo();
+
+
+// --- 初期化の修正 ---
+setInterval(updateClock, 1000);
+updateClock();
+createCalendar();
+initIdeas();
+initStickies();
+initTodo();
+updateHomeTodayEvent();
+
+// メモの読み込み先IDが合っているか確認
+const dailyMemoElem = document.getElementById('daily-memo');
+if (dailyMemoElem) {
+    dailyMemoElem.value = localStorage.getItem('daily-memo') || "";
+}
+
+showPage('home');
