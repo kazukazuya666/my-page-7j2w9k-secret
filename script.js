@@ -320,3 +320,97 @@ window.onload = () => {
 
     showPage('home');
 };
+
+
+
+// --- 時間割のデータ管理 ---
+let currentSemester = localStorage.getItem('current-semester') || "1年 前期";
+const semesters = ["1年 前期", "1年 後期", "2年 前期", "2年 後期", "3年 前期", "3年 後期", "4年 前期", "4年 後期"];
+let timetableData = JSON.parse(localStorage.getItem('timetable-data')) || {};
+
+// 時間割の初期化
+function initTimetable() {
+    const tabContainer = document.getElementById('semester-tabs');
+    const tbody = document.getElementById('timetable-body');
+    if (!tabContainer || !tbody) return;
+
+    // 学期タブの生成
+    tabContainer.innerHTML = "";
+    semesters.forEach(sem => {
+        const btn = document.createElement('button');
+        btn.innerText = sem;
+        btn.className = (currentSemester === sem) ? "sem-btn active" : "sem-btn";
+        btn.onclick = () => {
+            currentSemester = sem;
+            localStorage.setItem('current-semester', sem);
+            initTimetable();
+        };
+        tabContainer.appendChild(btn);
+    });
+
+    // 5限×5日のテーブル生成
+    tbody.innerHTML = "";
+    const days = ["月", "火", "水", "木", "金"];
+    for (let period = 1; period <= 5; period++) {
+        const row = document.createElement('tr');
+        
+        // 時限表示 (左端)
+        const timeTd = document.createElement('td');
+        timeTd.innerText = period;
+        timeTd.style.background = "#333";
+        timeTd.style.width = "30px";
+        row.appendChild(timeTd);
+
+        // 各曜日のセル
+        days.forEach(day => {
+            const td = document.createElement('td');
+            const key = `${day}-${period}`;
+            const data = (timetableData[currentSemester] && timetableData[currentSemester][key]) 
+                         ? timetableData[currentSemester][key] 
+                         : {subject: "", place: ""};
+
+            td.innerHTML = `
+                <span class="tt-subject">${data.subject}</span>
+                <span class="tt-place">${data.place}</span>
+            `;
+            
+            td.onclick = () => editTimetableSlot(currentSemester, key, data.subject, data.place);
+            row.appendChild(td);
+        });
+        tbody.appendChild(row);
+    }
+}
+
+// マスをタップした時の編集処理
+function editTimetableSlot(sem, key, oldSub, oldPlace) {
+    const sub = prompt(`${sem}【${key}】\n科目名を入力:`, oldSub);
+    if (sub === null) return;
+    const place = prompt(`${sem}【${key}】\n教室・場所を入力:`, oldPlace);
+    if (place === null) return;
+
+    if (!timetableData[sem]) timetableData[sem] = {};
+    timetableData[sem][key] = { subject: sub, place: place };
+    
+    localStorage.setItem('timetable-data', JSON.stringify(timetableData));
+    initTimetable();
+}
+
+// --- 既存の初期化処理(window.onload)に追記 ---
+// 既存の window.onload の中に initTimetable(); を追加してください
+const originalOnload = window.onload;
+window.onload = () => {
+    if (originalOnload) originalOnload();
+    initTimetable();
+};
+
+// showPage関数も更新して、時間割タブが押された時に初期化するようにします
+function showPage(pageId) {
+    document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    
+    if (pageId === 'home') updateHomeTodayEvent();
+    if (pageId === 'calendar') createCalendar();
+    if (pageId === 'timetable') initTimetable(); // 追加
+    
+    window.scrollTo(0, 0);
+}

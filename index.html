@@ -104,10 +104,37 @@
     </div>
 
     <div class="tab-menu">
-        <button onclick="showPage('home')">🏠<br>ホーム</button>
-        <button onclick="showPage('notes-all')">📒<br>ノート</button> 
-        <button onclick="showPage('calendar')">📅<br>予定表</button>
+    <button onclick="showPage('home')">🏠<br>ホーム</button>
+    <button onclick="showPage('timetable')">🕒<br>時間割</button> <button onclick="showPage('notes-all')">📒<br>ノート</button> 
+    <button onclick="showPage('calendar')">📅<br>予定表</button>
+</div>
+
+<div id="timetable" class="page-content">
+    <div class="section">
+        <h2>🕒 時間割</h2>
+        <div id="semester-tabs" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px;">
+            </div>
+
+        <div style="overflow-x: auto;">
+            <table class="timetable-table" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                <thead>
+                    <tr style="background: #333; color: var(--accent);">
+                        <th style="width: 30px; padding: 10px 0;"></th>
+                        <th>月</th>
+                        <th>火</th>
+                        <th>水</th>
+                        <th>木</th>
+                        <th>金</th>
+                    </tr>
+                </thead>
+                <tbody id="timetable-body">
+                    </tbody>
+            </table>
+        </div>
+        <p style="font-size: 0.7rem; color: #888; margin-top: 10px; text-align: center;">※マスをタップして編集</p>
     </div>
+</div>
+
 
     <script src="script.js" defer></script>
 

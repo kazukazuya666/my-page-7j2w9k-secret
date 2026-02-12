@@ -190,3 +190,48 @@ td.selected {
     padding: 12px;
     font-size: 0.95rem;
 }
+
+
+
+/* 時間割用のスタイル（既存のCSSに追加） */
+.timetable-table td {
+    border: 1px solid #444;
+    height: 70px; /* 少し高さを出して押しやすく */
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 4px;
+    background: rgba(255,255,255,0.02);
+}
+
+.tt-subject {
+    display: block;
+    font-weight: bold;
+    color: var(--accent);
+    margin-bottom: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tt-place {
+    display: block;
+    font-size: 0.6rem;
+    color: #aaa;
+}
+
+/* 学期タブのボタンデザイン */
+.sem-btn {
+    background: #333;
+    color: #888;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+.sem-btn.active {
+    background: var(--accent);
+    color: white;
+}
