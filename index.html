@@ -112,13 +112,15 @@
 <div id="timetable" class="page-content">
     <div class="section">
         <h2>🕒 時間割</h2>
-        <div id="semester-tabs" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px;"></div>
+        <div id="semester-tabs" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px;"></div>
+        
+        <p style="font-size: 0.65rem; color: var(--accent); margin-bottom: 5px; text-align: right;">⇄ 横にスクロールできます</p>
 
-        <div class="timetable-scroll-wrapper" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+        <div class="timetable-scroll-wrapper">
             <table class="timetable-table">
                 <thead>
                     <tr>
-                        <th style="width: 30px;"></th>
+                        <th></th>
                         <th>月</th>
                         <th>火</th>
                         <th>水</th>
@@ -130,9 +132,9 @@
                     </tbody>
             </table>
         </div>
-        <p style="font-size: 0.7rem; color: #888; margin-top: 10px; text-align: center;">※マスをタップして編集</p>
     </div>
 </div>
+
 
 
 

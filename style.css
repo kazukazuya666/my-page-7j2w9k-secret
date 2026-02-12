@@ -193,45 +193,74 @@ td.selected {
 
 
 
-/* 時間割用のスタイル（既存のCSSに追加） */
-.timetable-table td {
+.timetable-table {
+    width: 100%;
+    min-width: 350px; /* スマホで潰れないための最低幅 */
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.timetable-table th, .timetable-table td {
     border: 1px solid #444;
-    height: 70px; /* 少し高さを出して押しやすく */
+    height: 80px; /* 高さをしっかり確保 */
     text-align: center;
     vertical-align: middle;
-    cursor: pointer;
-    font-size: 0.75rem;
-    padding: 4px;
-    background: rgba(255,255,255,0.02);
+    padding: 2px;
+    background: rgba(255,255,255,0.03);
+    word-break: break-all; /* 長い名前でも改行させる */
+}
+
+/* 1列目（時限）のスタイル */
+.timetable-table td:first-child {
+    background: #333;
+    font-weight: bold;
+    color: var(--accent);
 }
 
 .tt-subject {
     display: block;
     font-weight: bold;
     color: var(--accent);
-    margin-bottom: 3px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-size: 0.8rem;
+    line-height: 1.2;
 }
 
 .tt-place {
     display: block;
-    font-size: 0.6rem;
+    font-size: 0.65rem;
     color: #aaa;
+    margin-top: 4px;
 }
 
-/* 学期タブのボタンデザイン */
-.sem-btn {
-    background: #333;
-    color: #888;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 15px;
-    font-size: 0.75rem;
-    white-space: nowrap;
+
+/* スクロールを包む外枠 */
+.timetable-scroll-wrapper {
+    width: 100%;
+    overflow-x: auto; /* 横スクロールを許可 */
+    -webkit-overflow-scrolling: touch; /* iPhoneでヌルヌル動くようにする */
+    border: 1px solid #444;
+    border-radius: 10px;
 }
-.sem-btn.active {
-    background: var(--accent);
-    color: white;
+
+.timetable-table {
+    width: 100%;
+    /* ★ここが重要！スマホの画面（約375px）より広い 600px を最低幅にする */
+    min-width: 600px; 
+    border-collapse: collapse;
+    table-layout: fixed; /* 全ての列を同じ幅にする */
+}
+
+.timetable-table th, .timetable-table td {
+    border: 1px solid #444;
+    height: 80px;
+    text-align: center;
+    padding: 5px;
+}
+
+/* 時限（1,2...）の列だけ少し細くする */
+.timetable-table th:first-child, 
+.timetable-table td:first-child {
+    width: 40px;
+    min-width: 40px;
+    background: #333;
 }
