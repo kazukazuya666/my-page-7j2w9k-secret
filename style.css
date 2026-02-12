@@ -233,34 +233,44 @@ td.selected {
 }
 
 
-/* スクロールを包む外枠 */
+/* 外枠：ここがスクロールの窓になります */
 .timetable-scroll-wrapper {
     width: 100%;
-    overflow-x: auto; /* 横スクロールを許可 */
-    -webkit-overflow-scrolling: touch; /* iPhoneでヌルヌル動くようにする */
+    overflow-x: auto !important; /* 強制的にスクロールを許可 */
+    -webkit-overflow-scrolling: touch;
     border: 1px solid #444;
     border-radius: 10px;
+    margin-top: 10px;
+    background: #222; /* 背景色をつけておくと見やすい */
 }
 
+/* テーブル本体 */
 .timetable-table {
     width: 100%;
-    /* ★ここが重要！スマホの画面（約375px）より広い 600px を最低幅にする */
-    min-width: 600px; 
+    /* table-layout: fixed; は削除するか auto にします */
+    table-layout: auto; 
     border-collapse: collapse;
-    table-layout: fixed; /* 全ての列を同じ幅にする */
 }
 
-.timetable-table th, .timetable-table td {
+/* 各マスの設定 */
+.timetable-table th, 
+.timetable-table td {
     border: 1px solid #444;
     height: 80px;
     text-align: center;
-    padding: 5px;
+    padding: 8px;
+    /* ★ここが最重要！ 各マスの「最低幅」をしっかり指定する */
+    min-width: 100px; 
+    box-sizing: border-box;
 }
 
-/* 時限（1,2...）の列だけ少し細くする */
+/* 1列目（時限）だけは細くていい */
 .timetable-table th:first-child, 
 .timetable-table td:first-child {
-    width: 40px;
     min-width: 40px;
+    width: 40px;
     background: #333;
+    position: sticky; /* スクロールしても時限だけ左に固定されるとお洒落です */
+    left: 0;
+    z-index: 10;
 }

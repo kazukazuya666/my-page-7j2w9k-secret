@@ -414,3 +414,13 @@ function showPage(pageId) {
     
     window.scrollTo(0, 0);
 }
+
+
+
+// initTimetable 内の td.innerHTML の部分をこれに差し替え
+td.innerHTML = `
+    <div style="width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+        <span class="tt-subject" style="white-space: normal; word-wrap: break-word; display: block; width: 100%;">${data.subject || ""}</span>
+        <span class="tt-place" style="white-space: normal; word-wrap: break-word; display: block; width: 100%; margin-top: 4px;">${data.place || ""}</span>
+    </div>
+`;
