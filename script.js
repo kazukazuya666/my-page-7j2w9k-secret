@@ -1,11 +1,15 @@
 let displayDate = new Date();
 let selectedFullDate = "";
 
-// ページ切り替え
+// --- ページ切り替え ---
 function showPage(pageId) {
     document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
+    
+    // ページを切り替えた瞬間に描画をリフレッシュする
     if (pageId === 'home') updateHomeTodayEvent();
+    if (pageId === 'calendar') createCalendar();
+    
     window.scrollTo(0, 0);
 }
 
@@ -14,29 +18,40 @@ function updateHomeTodayEvent() {
     const now = new Date();
     const fullDate = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
     const event = localStorage.getItem(fullDate) || "本日の予定はありません";
-    document.getElementById('today-event-text').innerText = event;
+    const elem = document.getElementById('today-event-text');
+    if (elem) elem.innerText = event;
 }
 
 // 時計の更新
 function updateClock() {
     const now = new Date();
     const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-    document.getElementById('date').innerText = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} (${days[now.getDay()]})`;
-    document.getElementById('clock').innerText = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+    const dateElem = document.getElementById('date');
+    const clockElem = document.getElementById('clock');
+    if (dateElem) dateElem.innerText = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} (${days[now.getDay()]})`;
+    if (clockElem) clockElem.innerText = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
 }
 
-// カレンダー作成
+// --- カレンダー機能 ---
 function createCalendar() {
     const year = displayDate.getFullYear();
     const month = displayDate.getMonth();
     document.getElementById('calendar-month').innerText = `${year}年 ${month + 1}月`;
+    
     const firstDay = new Date(year, month, 1).getDay();
     const lastDate = new Date(year, month + 1, 0).getDate();
     const tbody = document.getElementById('calendar-body');
     tbody.innerHTML = "";
+    
     const today = new Date();
-    let date = 1;
+    const todayStr = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+    
+    // 初回起動時、何も選択されていなければ今日をセット
+    if (!selectedFullDate) {
+        selectedFullDate = todayStr;
+    }
 
+    let date = 1;
     for (let i = 0; i < 6; i++) {
         let row = document.createElement('tr');
         for (let j = 0; j < 7; j++) {
@@ -45,24 +60,12 @@ function createCalendar() {
                 cell.innerText = "";
             } else {
                 let d = date;
-                cell.innerText = d;
                 let fullDate = `${year}-${month + 1}-${d}`;
+                cell.innerText = d;
                 
-                // --- クラス判定の修正 ---
-                // 1. 今日かどうか (赤っぽくなる枠線や背景)
-                if (d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                    cell.classList.add('today');
-                }
-                
-                // 2. 予定があるかどうか (ドットや色)
-                if (localStorage.getItem(fullDate)) {
-                    cell.classList.add('has-event');
-                }
-                
-                // 3. 選択中かどうか
-                if (selectedFullDate === fullDate) {
-                    cell.classList.add('selected');
-                }
+                if (fullDate === todayStr) cell.classList.add('today');
+                if (localStorage.getItem(fullDate)) cell.classList.add('has-event');
+                if (selectedFullDate === fullDate) cell.classList.add('selected');
 
                 cell.onclick = () => selectDate(cell, fullDate);
                 date++;
@@ -72,23 +75,38 @@ function createCalendar() {
         tbody.appendChild(row);
         if (date > lastDate) break;
     }
-}
 
+    // ★重要：カレンダー再描画時に、選択中の予定を入力欄に強制反映
+    refreshEventInput();
+}
 
 function selectDate(element, fullDate) {
     document.querySelectorAll('#calendar-body td').forEach(td => td.classList.remove('selected'));
     element.classList.add('selected');
     selectedFullDate = fullDate;
-    document.getElementById('selected-date-label').innerText = fullDate + " の予定";
-    document.getElementById('event-input').value = localStorage.getItem(fullDate) || "";
+    refreshEventInput();
+}
+
+// 入力欄を更新する専用関数
+function refreshEventInput() {
+    const label = document.getElementById('selected-date-label');
+    const input = document.getElementById('event-input');
+    if (selectedFullDate) {
+        if (label) label.innerText = selectedFullDate + " の予定";
+        if (input) input.value = localStorage.getItem(selectedFullDate) || "";
+    }
 }
 
 function saveEvent() {
     if (!selectedFullDate) return;
     const val = document.getElementById('event-input').value;
-    if (val) localStorage.setItem(selectedFullDate, val);
-    else localStorage.removeItem(selectedFullDate);
-    createCalendar();
+    if (val.trim()) {
+        localStorage.setItem(selectedFullDate, val);
+    } else {
+        localStorage.removeItem(selectedFullDate);
+    }
+    createCalendar(); 
+    updateHomeTodayEvent(); 
 }
 
 function changeMonth(diff) {
@@ -96,22 +114,17 @@ function changeMonth(diff) {
     createCalendar();
 }
 
-// ネタ帳
+// --- ネタ帳 ---
 let ideaPages = JSON.parse(localStorage.getItem('idea-pages')) || [{title: "ページ1", content: ""}];
 let currentPageIndex = 0;
 
 function initIdeas() {
     const bar = document.getElementById('tab-bar');
-    
-    // エラー防止：もしタブを表示する場所（tab-bar）がなければ、何もしないで終了
     if (!bar) return; 
-
     bar.innerHTML = "";
     ideaPages.forEach((p, i) => {
         const b = document.createElement('button');
         b.innerText = p.title;
-        
-        // デザイン設定
         b.style.backgroundColor = (i === currentPageIndex) ? "var(--accent)" : "#444";
         b.style.color = "white";
         b.style.borderRadius = "20px";
@@ -121,33 +134,16 @@ function initIdeas() {
         b.style.fontSize = "14px";
         b.style.whiteSpace = "nowrap"; 
         b.style.cursor = "pointer";
-
-        // クリックで切り替え
-        b.onclick = () => { 
-            currentPageIndex = i; 
-            initIdeas(); 
-        };
-
-        // ダブルクリックで名前変更
+        b.onclick = () => { currentPageIndex = i; initIdeas(); };
         b.ondblclick = () => {
             const n = prompt("名前変更", p.title);
-            if(n) { 
-                p.title = n; 
-                saveIdeas(); 
-                initIdeas(); 
-            }
+            if(n) { p.title = n; saveIdeas(); initIdeas(); }
         };
-        
         bar.appendChild(b);
     });
-
-    // ページの内容（テキストエリア）を表示
     const noteArea = document.getElementById('idea-note');
-    if (noteArea) {
-        noteArea.value = ideaPages[currentPageIndex].content;
-    }
+    if (noteArea) noteArea.value = ideaPages[currentPageIndex].content;
 }
-
 
 function createNewPage() {
     const n = prompt("ページ名", "新ページ");
@@ -161,17 +157,18 @@ function saveCurrentIdea() {
 
 function saveIdeas() { localStorage.setItem('idea-pages', JSON.stringify(ideaPages)); }
 
-// 付箋
+// --- 付箋 ---
 let stickies = JSON.parse(localStorage.getItem('sticky-notes')) || [];
 function initStickies() {
     const c = document.getElementById('sticky-container');
+    if (!c) return;
     c.innerHTML = "";
     stickies.forEach((n, i) => {
         const d = document.createElement('div');
         d.className = 'sticky-note';
         d.style.backgroundColor = n.color;
         d.style.width = "100px"; d.style.height = "100px";
-        d.innerHTML = `<textarea oninput="updateSticky(${i}, this.value)">${n.content}</textarea><span style="position:absolute;top:0;right:5px;" onclick="delSticky(${i})">×</span>`;
+        d.innerHTML = `<textarea oninput="updateSticky(${i}, this.value)">${n.content}</textarea><span style="position:absolute;top:0;right:5px;cursor:pointer;" onclick="delSticky(${i})">×</span>`;
         c.appendChild(d);
     });
 }
@@ -185,36 +182,15 @@ function delSticky(i) { stickies.splice(i,1); localStorage.setItem('sticky-notes
 
 function saveDailyMemo() { localStorage.setItem('daily-memo', document.getElementById('daily-memo').value); }
 
-
-
-
-function saveEvent() {
-    if (!selectedFullDate) return;
-    const val = document.getElementById('event-input').value;
-    if (val) {
-        localStorage.setItem(selectedFullDate, val);
-    } else {
-        localStorage.removeItem(selectedFullDate);
-    }
-    
-    createCalendar(); // カレンダーのドットを更新
-    updateHomeTodayEvent(); // ★これでホーム画面の「今日の予定」が即座に変わります！
-}
-
-// --- ToDo機能の追加 ---
+// --- ToDo機能 ---
 let todoData = JSON.parse(localStorage.getItem('todo-data')) || [{category: "映画", items: []}];
 let currentTodoCategoryIndex = 0;
 let currentTodoFilter = 'all';
 
 function initTodo() {
     const bar = document.getElementById('todo-category-bar');
-    // ↓ これを追加！
     if (!bar) return; 
-
     bar.innerHTML = "";
-    // ...あとの処理はそのまま
-
-
     todoData.forEach((cat, i) => {
         const group = document.createElement('div');
         group.style.display = "inline-flex";
@@ -223,32 +199,20 @@ function initTodo() {
         group.style.borderRadius = "20px";
         group.style.marginRight = "8px";
         group.style.padding = "2px 10px";
+        group.style.cursor = "pointer";
 
-        // カテゴリー名（タップで切り替え）
         const nameBtn = document.createElement('span');
         nameBtn.innerText = cat.category;
         nameBtn.style.color = "white";
         nameBtn.style.fontSize = "0.8rem";
-        nameBtn.style.padding = "5px 0";
-        nameBtn.style.cursor = "pointer";
-        nameBtn.onclick = () => { 
-            currentTodoCategoryIndex = i; 
-            initTodo(); 
-        };
+        nameBtn.onclick = () => { currentTodoCategoryIndex = i; initTodo(); };
 
-        // カテゴリー削除ボタン（小さな「×」）
         const delBtn = document.createElement('span');
-        delBtn.innerText = "×";
-        delBtn.style.marginLeft = "8px";
+        delBtn.innerText = " ×";
         delBtn.style.color = "rgba(255,255,255,0.6)";
-        delBtn.style.fontSize = "1.2rem";
-        delBtn.style.cursor = "pointer";
         delBtn.onclick = (e) => {
-            e.stopPropagation(); // 切り替えイベントを邪魔しない
-            if (todoData.length <= 1) {
-                alert("最後の1つは削除できません");
-                return;
-            }
+            e.stopPropagation();
+            if (todoData.length <= 1) return;
             if (confirm(`カテゴリー「${cat.category}」を削除しますか？`)) {
                 todoData.splice(i, 1);
                 currentTodoCategoryIndex = 0;
@@ -256,66 +220,41 @@ function initTodo() {
                 initTodo();
             }
         };
-
         group.appendChild(nameBtn);
         group.appendChild(delBtn);
         bar.appendChild(group);
     });
-    
     renderTodoList();
 }
-
-
 
 function renderTodoList() {
     const container = document.getElementById('todo-list-container');
     if (!container) return;
     container.innerHTML = "";
     const items = todoData[currentTodoCategoryIndex].items;
-
     items.forEach((item, index) => {
         if (currentTodoFilter === 'active' && item.done) return;
         if (currentTodoFilter === 'completed' && !item.done) return;
-
         const div = document.createElement('div');
         div.className = `todo-item ${item.done ? 'completed' : ''}`;
-        
         div.innerHTML = `
             <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleTodo(${index})">
             <span>${item.text}</span>
-            <button onclick="deleteTodo(${index})" style="background:none; border:none; color:#ff2e63; font-size:1.5rem; padding:0 10px;">
-                ×
-            </button>
+            <button onclick="deleteTodo(${index})" style="background:none; border:none; color:#ff2e63; font-size:1.5rem; padding:0 10px;">×</button>
         `;
         container.appendChild(div);
     });
 }
 
-
-
-
 function addTodoItem() {
     const input = document.getElementById('todo-input');
-    if (!input) return;
-
-    const val = input.value.trim();
-    if (val === "") return;
-
-    // 現在のカテゴリーにデータを追加
-    todoData[currentTodoCategoryIndex].items.push({text: val, done: false});
-    
-    // 入力欄を空にする
+    if (!input || input.value.trim() === "") return;
+    todoData[currentTodoCategoryIndex].items.push({text: input.value.trim(), done: false});
     input.value = "";
-    
-    // 保存と再描画
     saveTodo();
     renderTodoList();
-    
-    // 【重要】スマホのキーボードを強制的に閉じる（これで画面を更新させる）
     input.blur(); 
 }
-
-
 
 function toggleTodo(index) {
     todoData[currentTodoCategoryIndex].items[index].done = !todoData[currentTodoCategoryIndex].items[index].done;
@@ -351,23 +290,33 @@ function createTodoCategory() {
 
 function saveTodo() { localStorage.setItem('todo-data', JSON.stringify(todoData)); }
 
-// 最初に動かす
-initTodo();
-
-
-// --- 初期化の修正 ---
-setInterval(updateClock, 1000);
-updateClock();
-createCalendar();
-initIdeas();
-initStickies();
-initTodo();
-updateHomeTodayEvent();
-
-// メモの読み込み先IDが合っているか確認
-const dailyMemoElem = document.getElementById('daily-memo');
-if (dailyMemoElem) {
-    dailyMemoElem.value = localStorage.getItem('daily-memo') || "";
+// --- クイックリンクを別タブで開く ---
+function initExternalLinks() {
+    document.querySelectorAll('.link-grid a').forEach(link => {
+        link.onclick = (e) => {
+            e.preventDefault();
+            window.open(link.href, '_blank', 'noopener,noreferrer');
+        };
+    });
 }
 
-showPage('home');
+// --- 初期化処理 ---
+window.onload = () => {
+    updateClock();
+    setInterval(updateClock, 1000);
+    
+    // 各機能の初期化
+    createCalendar();
+    initIdeas();
+    initStickies();
+    initTodo();
+    updateHomeTodayEvent();
+    initExternalLinks();
+
+    const dailyMemoElem = document.getElementById('daily-memo');
+    if (dailyMemoElem) {
+        dailyMemoElem.value = localStorage.getItem('daily-memo') || "";
+    }
+
+    showPage('home');
+};
