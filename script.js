@@ -267,81 +267,29 @@ function initTodo() {
 
 
 
-function renderTodoCategories() {
-    const bar = document.getElementById('todo-category-bar');
-    if (!bar) return;
-    bar.innerHTML = "";
+function renderTodoList() {
+    const container = document.getElementById('todo-list-container');
+    if (!container) return;
+    container.innerHTML = "";
+    const items = todoData[currentTodoCategoryIndex].items;
 
-    todoData.forEach((cat, i) => {
-        const btn = document.createElement('div');
-        btn.className = `todo-cat-item ${i === currentTodoCategoryIndex ? 'active' : ''}`;
-        
-        // カテゴリー名を表示するスパン
-        const span = document.createElement('span');
-        span.innerText = cat.name;
-        
-        // ★ダブルクリックで名前変更
-        span.ondblclick = (e) => {
-            e.stopPropagation(); // 親要素のクリックイベント（切り替え）を防ぐ
-            const newName = prompt("カテゴリー名を変更:", cat.name);
-            if (newName && newName.trim() !== "") {
-                cat.name = newName.trim();
-                saveTodo();
-                renderTodoCategories();
-            }
-        };
-        
-        // スマホだとダブルクリックしにくいので、長押しでも対応したい場合はこちら（任意）
-        // 今回はシンプルにondblclickで実装します
-        
-        btn.onclick = () => {
-            currentTodoCategoryIndex = i;
-            renderTodoCategories();
-            renderTodoList();
-        };
+    items.forEach((item, index) => {
+        if (currentTodoFilter === 'active' && item.done) return;
+        if (currentTodoFilter === 'completed' && !item.done) return;
 
-        btn.appendChild(span);
-
-        // 削除ボタン (×)
-        const delBtn = document.createElement('button');
-        delBtn.innerHTML = "×";
-        delBtn.style.marginLeft = "8px";
-        delBtn.style.background = "none";
-        delBtn.style.border = "none";
-        delBtn.style.color = "rgba(255,255,255,0.5)";
-        delBtn.onclick = (e) => {
-            e.stopPropagation();
-            if (todoData.length > 1) {
-                if (confirm(`カテゴリー「${cat.name}」を削除しますか？`)) {
-                    todoData.splice(i, 1);
-                    currentTodoCategoryIndex = 0;
-                    saveTodo();
-                    renderTodoCategories();
-                    renderTodoList();
-                }
-            }
-        };
-        btn.appendChild(delBtn);
-        bar.appendChild(btn);
+        const div = document.createElement('div');
+        div.className = `todo-item ${item.done ? 'completed' : ''}`;
+        
+        div.innerHTML = `
+            <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleTodo(${index})">
+            <span>${item.text}</span>
+            <button onclick="deleteTodo(${index})" style="background:none; border:none; color:#ff2e63; font-size:1.5rem; padding:0 10px;">
+                ×
+            </button>
+        `;
+        container.appendChild(div);
     });
 }
-
-
-// delBtn（削除ボタン）の前にこれを追加
-const editBtn = document.createElement('span');
-editBtn.innerHTML = " ✎";
-editBtn.style.fontSize = "0.8rem";
-editBtn.onclick = (e) => {
-    e.stopPropagation();
-    const newName = prompt("カテゴリー名を変更:", cat.name);
-    if (newName) {
-        cat.name = newName;
-        saveTodo();
-        renderTodoCategories();
-    }
-};
-btn.appendChild(editBtn);
-
 
 
 

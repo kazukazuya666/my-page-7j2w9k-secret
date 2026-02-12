@@ -2,23 +2,16 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>My Dashboard</title>
     <meta name="robots" content="noindex,nofollow">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="stylesheet" href="style.css">
-    <head>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="MyDash">
     
-    <link rel="apple-touch-icon" href="icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="My Dashboard">
+    <link rel="apple-touch-icon" href="icon.png">
 
-</head>
-
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -44,32 +37,30 @@
             </div>
         </div>
         <div class="section">
-     <h2>✅ ToDo・コレクション</h2>
-    <div id="todo-category-bar" style="display: flex; gap: 5px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 5px;"></div>
-    
-    <div style="display: flex; gap: 5px; margin-bottom: 12px;">
-        <input type="text" id="todo-input" placeholder="新しい項目を追加..." style="flex: 1; background: #3d3d3d; border: 1px solid var(--accent); color: white; border-radius: 10px; padding: 10px; outline: none;">
-        <button 
-            onclick="addTodoItem()" 
-            ontouchstart="addTodoItem(); event.preventDefault();" 
-            class="nav-btn" 
-            style="border-radius: 10px; padding: 0 15px;">
-            ＋
-        </button>
+            <h2>✅ ToDo・コレクション</h2>
+            <div id="todo-category-bar" style="display: flex; gap: 5px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 5px;"></div>
+            
+            <div style="display: flex; gap: 5px; margin-bottom: 12px;">
+                <input type="text" id="todo-input" placeholder="新しい項目を追加..." style="flex: 1; background: #3d3d3d; border: 1px solid var(--accent); color: white; border-radius: 10px; padding: 10px; outline: none;">
+                <button 
+                    onclick="addTodoItem()" 
+                    ontouchstart="addTodoItem(); event.preventDefault();" 
+                    class="nav-btn" 
+                    style="border-radius: 10px; padding: 0 15px;">
+                    ＋
+                </button>
+            </div>
 
-    </div>
+            <div class="filter-bar" style="display: flex; gap: 5px; margin-bottom: 12px;">
+                <button onclick="setTodoFilter('all')" class="filter-btn active" id="f-all">全部</button>
+                <button onclick="setTodoFilter('active')" class="filter-btn" id="f-active">未達成</button>
+                <button onclick="setTodoFilter('completed')" class="filter-btn" id="f-completed">達成済</button>
+            </div>
 
-    <div class="filter-bar" style="display: flex; gap: 5px; margin-bottom: 12px;">
-        <button onclick="setTodoFilter('all')" class="filter-btn active" id="f-all">全部</button>
-        <button onclick="setTodoFilter('active')" class="filter-btn" id="f-active">未達成</button>
-        <button onclick="setTodoFilter('completed')" class="filter-btn" id="f-completed">達成済</button>
-    </div>
-
-    <div id="todo-list-container"></div>
-    
-        <button onclick="createTodoCategory()" style="margin-top:15px; font-size: 0.8rem; background: none; border: 1px dashed var(--accent); color: var(--accent); width: 100%; padding: 8px; border-radius: 10px;">＋ カテゴリーを増やす</button>
-    </div>
-
+            <div id="todo-list-container"></div>
+            
+            <button onclick="createTodoCategory()" style="margin-top:15px; font-size: 0.8rem; background: none; border: 1px dashed var(--accent); color: var(--accent); width: 100%; padding: 8px; border-radius: 10px;">＋ カテゴリーを増やす</button>
+        </div>
     </div>
 
     <div id="notes-all" class="page-content">
@@ -85,15 +76,15 @@
                 <button onclick="addStickyNote()" class="nav-btn" style="flex: 1;">付箋を追加</button>
             </div>
             <div id="sticky-container" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
-        </div> <div class="section">
+        </div>
+
+        <div class="section">
             <h2>📝 ネタ帳</h2>
             <div id="tab-bar" style="display: flex; overflow-x: auto; margin-bottom: 10px; padding-bottom: 5px;"></div>
             <textarea id="idea-note" oninput="saveCurrentIdea()" placeholder="ここに書き込みます..." style="height: 150px;"></textarea>
             <button onclick="createNewPage()" class="nav-btn" style="margin-top: 8px; width: 100%;">＋ 新しいページ</button>
         </div>
     </div>
-
-    
 
     <div id="calendar" class="page-content">
         <div class="section">
@@ -113,9 +104,9 @@
 
     <div class="tab-menu">
         <button onclick="showPage('home')">🏠<br>ホーム</button>
-        <button onclick="showPage('notes-all')">📒<br>ノート</button> <button onclick="showPage('calendar')">📅<br>予定表</button>
+        <button onclick="showPage('notes-all')">📒<br>ノート</button> 
+        <button onclick="showPage('calendar')">📅<br>予定表</button>
     </div>
-
 
     <script src="script.js" defer></script>
 
