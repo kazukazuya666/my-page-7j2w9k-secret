@@ -303,3 +303,31 @@ td.selected {
     grid-column: span 2 !important;
     margin-top: 5px;
 }
+
+
+
+
+
+
+/* スマホ（画面幅が480px以下）の場合だけ適用する設定 */
+@media screen and (max-width: 480px) {
+    /* 1. ボタン同士の隙間を少し詰める */
+    .link-grid {
+        gap: 6px !important; 
+    }
+
+    /* 2. ボタンの中身をスマホに最適化 */
+    .quick-link-btn {
+        font-size: 0.85rem !important; /* 文字を少しだけ小さくして1行に収める */
+        height: 32px !important;       /* 高さを少しだけ出すと押しやすくなる */
+        padding: 0 4px !important;     /* 左右の余白を最小限に */
+        white-space: nowrap;           /* 文字を絶対に改行させない */
+        overflow: hidden;              /* はみ出た文字を隠す */
+        text-overflow: ellipsis;       /* 長すぎる名前は「...」にする */
+    }
+
+    /* 3. セクション全体の左右余白を少し削ってボタンの幅を確保 */
+    .section {
+        padding: 10px !important;
+    }
+}
