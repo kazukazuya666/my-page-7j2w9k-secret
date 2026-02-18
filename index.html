@@ -22,20 +22,21 @@
 
     <div id="home" class="page-content active">
         <div class="section today-highlight">
-            <h2>📌 今日の予定</h2>
-            <div id="today-event-text">予定はありません</div>
+            <h2 id="home-title">📌 今日の予定</h2> <div id="today-event-text">予定はありません</div>
         </div>
-        <div class="section">
-    <h2>クイックリンク</h2>
-    <div class="link-grid">
-        <a href="https://www.google.com" class="btn" target="_blank" rel="noopener noreferrer">Google</a>
-        <a href="https://tv.dmm.com/vod/" class="btn" target="_blank" rel="noopener noreferrer">dmm</a>
-        <a href="https://www.youtube.com/" class="btn" target="_blank" rel="noopener noreferrer">YouTube</a>
-        <a href="https://unipa.nagoya-bunri.ac.jp/uprx/up/pk/pky501/Pky50101.xhtml" class="btn" target="_blank" rel="noopener noreferrer">大学ポータル</a>
-        <a href="https://webclass.nagoya-bunri.ac.jp/webclass/login.php" class="btn" target="_blank" rel="noopener noreferrer">WebClass</a>
-        <a href="https://www.nagoya-bunri.ac.jp/for_students/" class="btn" target="_blank" rel="noopener noreferrer">学生ページ</a>
+
+    <div class="section">
+        <h2 id="link-section-title">クイックリンク</h2>
+        <div id="link-grid-container" class="link-grid">
         </div>
     </div>
+
+
+
+
+        <div style="text-align: center; padding: 10px 0 30px 0;">
+            <button onclick="openLinkEditor()" style="background: none; border: 1px solid #444; color: #666; font-size: 0.7rem; padding: 5px 15px; border-radius: 15px;">⚙️ リンクを管理</button>
+        </div>
 
         <div class="section">
             <h2>✅ ToDo・コレクション</h2>
@@ -43,13 +44,7 @@
             
             <div style="display: flex; gap: 5px; margin-bottom: 12px;">
                 <input type="text" id="todo-input" placeholder="新しい項目を追加..." style="flex: 1; background: #3d3d3d; border: 1px solid var(--accent); color: white; border-radius: 10px; padding: 10px; outline: none;">
-                <button 
-                    onclick="addTodoItem()" 
-                    ontouchstart="addTodoItem(); event.preventDefault();" 
-                    class="nav-btn" 
-                    style="border-radius: 10px; padding: 0 15px;">
-                    ＋
-                </button>
+                <button onclick="addTodoItem()" class="nav-btn" style="border-radius: 10px; padding: 0 15px;">＋</button>
             </div>
 
             <div class="filter-bar" style="display: flex; gap: 5px; margin-bottom: 12px;">
@@ -59,7 +54,6 @@
             </div>
 
             <div id="todo-list-container"></div>
-            
             <button onclick="createTodoCategory()" style="margin-top:15px; font-size: 0.8rem; background: none; border: 1px dashed var(--accent); color: var(--accent); width: 100%; padding: 8px; border-radius: 10px;">＋ カテゴリーを増やす</button>
         </div>
     </div>
@@ -69,7 +63,6 @@
            <h2>🗒️ メモ</h2>
            <textarea id="daily-memo" oninput="saveDailyMemo()" placeholder="ちょっとしたメモに..." style="height: 100px;"></textarea>
         </div>
-
         <div class="section">
             <h2>📌 付箋</h2>
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
@@ -78,7 +71,6 @@
             </div>
             <div id="sticky-container" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
         </div>
-
         <div class="section">
             <h2>📝 ネタ帳</h2>
             <div id="tab-bar" style="display: flex; overflow-x: auto; margin-bottom: 10px; padding-bottom: 5px;"></div>
@@ -103,42 +95,50 @@
         </div>
     </div>
 
-    <div class="tab-menu">
-    <button onclick="showPage('home')">🏠<br>ホーム</button>
-    <button onclick="showPage('timetable')">🕒<br>時間割</button> <button onclick="showPage('notes-all')">📒<br>ノート</button> 
-    <button onclick="showPage('calendar')">📅<br>予定表</button>
-</div>
-
-<div id="timetable" class="page-content">
-    <div class="section">
-        <h2>🕒 時間割</h2>
-        <div id="semester-tabs" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px;"></div>
-        
-        <p style="font-size: 0.65rem; color: var(--accent); margin-bottom: 5px; text-align: right;">⇄ 横にスクロールできます</p>
-
-        <div class="timetable-scroll-wrapper">
-            <table class="timetable-table">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th>月</th>
-                        <th>火</th>
-                        <th>水</th>
-                        <th>木</th>
-                        <th>金</th>
-                    </tr>
-                </thead>
-                <tbody id="timetable-body">
-                    </tbody>
-            </table>
+    <div id="timetable" class="page-content">
+        <div class="section">
+            <h2>🕒 時間割</h2>
+            <div id="semester-tabs" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px;"></div>
+            <p style="font-size: 0.65rem; color: var(--accent); margin-bottom: 5px; text-align: right;">⇄ 横にスクロールできます</p>
+            <div class="timetable-scroll-wrapper">
+                <table class="timetable-table">
+                    <thead>
+                        <tr><th></th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th></tr>
+                    </thead>
+                    <tbody id="timetable-body"></tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
 
+    <div id="link-editor-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; overflow-y:auto; padding:20px; box-sizing:border-box;">
+        <div style="max-width:500px; margin:auto; padding-bottom: 100px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                <h2 id="editor-title" style="margin:0;">🔗 リンク編集</h2>
+                <div>
+                    <button onclick="toggleUraMode()" style="background:none; border:none; color:#222; margin-right: 15px;">●</button>
+                    <button onclick="closeLinkEditor()" style="background:none; border:none; color:white; font-size:1.5rem;">×</button>
+                </div>
+            </div>
+            
+            <div style="background:#222; padding:15px; border-radius:10px; margin-bottom:20px; border: 1px solid #333;">
+                <input type="text" id="new-link-name" placeholder="サイト名" style="width:100%; margin-bottom:10px; padding:12px; border-radius:8px; border:none; background:#333; color:white; box-sizing:border-box;">
+                <input type="text" id="new-link-url" placeholder="URL (https://...)" style="width:100%; margin-bottom:10px; padding:12px; border-radius:8px; border:none; background:#333; color:white; box-sizing:border-box;">
+                <button onclick="addLink()" style="width:100%; background:var(--accent); color:white; border:none; padding:12px; border-radius:8px; font-weight:bold;">＋ リンクを追加</button>
+            </div>
 
+            <div id="editor-link-list">
+                </div>
+        </div>
+    </div>
 
+    <div class="tab-menu">
+        <button onclick="showPage('home')">🏠<br>ホーム</button>
+        <button onclick="showPage('timetable')">🕒<br>時間割</button>
+        <button onclick="showPage('notes-all')">📒<br>ノート</button> 
+        <button onclick="showPage('calendar')">📅<br>予定表</button>
+    </div>
 
     <script src="script.js" defer></script>
-
 </body>
 </html>

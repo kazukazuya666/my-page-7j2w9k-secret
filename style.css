@@ -32,7 +32,6 @@ h2 { margin-top: 0; font-size: 1rem; border-left: 4px solid var(--accent); paddi
 .tab-menu button { background: none; border: none; color: #888; font-size: 10px; padding: 10px; width: 25%; }
 .tab-menu button:focus { color: var(--accent); }
 
-
 /* カレンダー関連 */
 .calendar-table { width: 100%; text-align: center; }
 .calendar-table td { padding: 12px 0; border-radius: 8px; cursor: pointer; }
@@ -40,9 +39,88 @@ h2 { margin-top: 0; font-size: 1rem; border-left: 4px solid var(--accent); paddi
 .calendar-table td.selected { border: 2px solid var(--accent); }
 .has-event::after { content: ''; display: block; width: 5px; height: 5px; background: var(--accent); border-radius: 50%; margin: 2px auto 0; }
 
-.link-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.btn { background: #3d3d3d; color: white; text-decoration: none; padding: 12px; border-radius: 10px; text-align: center; font-size: 0.8rem; }
-textarea { width: 100%; background: #3d3d3d; border: 1px solid var(--accent); color: white; border-radius: 10px; padding: 10px; box-sizing: border-box; outline: none; }
+/* リンク集の土台（2列のグリッドにする） */
+.link-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 左右2枚ずつ並べる */
+    gap: 12px;
+    margin-top: 15px;
+}
+
+/* 各リンク（ボタン）の見た目 */
+.link-grid .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 11px 7px;
+    background: rgba(255, 255, 255, 0.05); /* ほんのり背景色 */
+    border: 1px solid #444 !important; /* ★ここで枠線を強制する */
+    border-radius: 8px;
+    color: white;
+    text-decoration: none;
+    font-size: 0.7rem;
+    font-weight: bold;
+    text-align: center;
+    min-height: 37px;
+    box-sizing: border-box;
+}
+
+
+/* 既存の .btn デザインはそのままに、2マス幅用だけ追加 */
+.span-2 {
+    grid-column: span 2;
+    width: 100% !important; /* 横幅いっぱいに */
+    margin-top: 5px;
+}
+
+/* 元々の link-grid の設定を再確認（2列にする） */
+.link-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+
+/* 親要素：2列のグリッドを強制 */
+#link-grid-container {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    margin-top: 15px;
+}
+
+/* 2マス幅の扉ボタン用 */
+.span-2 {
+    grid-column: span 2 !important;
+    width: 100% !important;
+}
+
+/* 枠線を強制的に表示させる */
+#link-grid-container .btn {
+    border: 1px solid #444 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: white;
+}
+
+
+/* タップした時の反応 */
+.link-grid .btn:active {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(0.98);
+}
+
+/* 裏リンク表示中の枠線の色（お好みで） */
+.ura-active .btn {
+    border-color: #ff2e63 !important;
+}
+
+
+
 
 .sticky-note { padding: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); color: #333; position: relative; margin-bottom: 5px; }
 .sticky-note textarea { background: transparent !important; border: none !important; color: #333 !important; }
