@@ -279,31 +279,48 @@ td.selected {
 
 
 
-/* クイックリンク専用のボタンスタイル */
+/* --- 1. クイックリンク専用（ここだけを狙い撃ち） --- */
+.link-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important; /* 絶対に2列 */
+    gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
 .quick-link-btn {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    padding: 0 !important;
-    min-height: 30px !important;
-    height: 30px !important;
-    font-size: 0.7rem !important; /* 文字を大きく */
-    font-weight: bold !important;
+    height: 32px !important;       /* 高さを固定してズレを防ぐ */
+    font-size: 0.9rem !important;
+    padding: 0 4px !important;
+    margin: 0 !important;          /* 余計なマージンを排除 */
     background: rgba(255, 255, 255, 0.05) !important;
     border: 1px solid #444 !important;
     border-radius: 10px !important;
     color: white !important;
     text-decoration: none !important;
-    text-align: center !important;
+    white-space: nowrap !important; /* 改行を禁止して1行に収める */
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* --- 2. カレンダー・メモ・ToDoを「元のサイズ」に強制復元 --- */
+/* クイックリンク以外のボタン（.nav-btnやbuttonタグ）は標準サイズに固定 */
+button:not(.quick-link-btn), 
+.nav-btn, 
+.filter-btn {
+    min-height: 44px !important; /* スマホで押しやすい標準の高さ */
+    width: auto !important;      /* 勝手に広がらないようにする */
+}
+
+/* セクションの幅を安定させる */
+.section {
+    width: 100% !important;
     box-sizing: border-box !important;
+    overflow: hidden !important; /* はみ出しを許さない */
 }
-
-/* 2マス分の扉ボタン用 */
-.quick-link-btn.span-2 {
-    grid-column: span 2 !important;
-    margin-top: 5px;
-}
-
 
 
 
