@@ -47,31 +47,44 @@ h2 { margin-top: 0; font-size: 1rem; border-left: 4px solid var(--accent); paddi
     margin-top: 15px;
 }
 
-/* 各リンク（ボタン）の見た目 */
+
+
+
+/* 各リンク（ボタン）の見た目 - サイズ微調整版 */
 .link-grid .btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 8px;
-    background: rgba(255, 255, 255, 0.05); /* ほんのり背景色 */
-    border: 1px solid #444 !important; /* ★ここで枠線を強制する */
+    
+    /* 1. 枠を狭くするため、上下の余白(padding)をギリギリまで削る */
+    padding: 4px 4px !important; 
+    
+    /* 2. 文字をちょい大きく */
+    font-size: 0.9rem !important; 
+    font-weight: bold;
+    
+    /* 3. 枠が小さくならない原因を徹底排除 */
+    height: auto !important;      /* 高さを中身（文字）に合わせる */
+    min-height: 0 !important;     /* 最小高さの制限を消す */
+    line-height: 1.1 !important;  /* 文字自体の上下の隙間を詰める */
+
+    /* --- 以下、お気に入りの「雰囲気」を維持 --- */
+    background: rgba(255, 255, 255, 0.05); 
+    border: 1px solid #444 !important; 
     border-radius: 10px;
     color: white;
     text-decoration: none;
-    font-size: 0.7rem;
-    font-weight: bold;
     text-align: center;
-    min-height: 15px;
     box-sizing: border-box;
 }
 
-
-/* 既存の .btn デザインはそのままに、2マス幅用だけ追加 */
+/* 扉ボタン（2マス分）も同様に調整 */
 .span-2 {
-    grid-column: span 2;
-    width: 100% !important; /* 横幅いっぱいに */
+    grid-column: span 2 !important;
+    padding: 4px 2px !important; /* 扉だけ少し押しやすく */
     margin-top: 5px;
 }
+
 
 /* 元々の link-grid の設定を再確認（2列にする） */
 .link-grid {
@@ -85,7 +98,7 @@ h2 { margin-top: 0; font-size: 1rem; border-left: 4px solid var(--accent); paddi
 #link-grid-container {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
-    gap: 10px !important;
+    gap: 5px !important;
     margin-top: 15px;
 }
 
