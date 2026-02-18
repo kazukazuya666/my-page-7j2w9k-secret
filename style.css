@@ -43,7 +43,7 @@ h2 { margin-top: 0; font-size: 1rem; border-left: 4px solid var(--accent); paddi
 .link-grid {
     display: grid;
     grid-template-columns: 1fr 1fr; /* 左右2枚ずつ並べる */
-    gap: 12px;
+    gap: 10px;
     margin-top: 15px;
 }
 
@@ -52,16 +52,16 @@ h2 { margin-top: 0; font-size: 1rem; border-left: 4px solid var(--accent); paddi
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 11px 7px;
+    padding: 8px;
     background: rgba(255, 255, 255, 0.05); /* ほんのり背景色 */
     border: 1px solid #444 !important; /* ★ここで枠線を強制する */
-    border-radius: 8px;
+    border-radius: 10px;
     color: white;
     text-decoration: none;
     font-size: 0.7rem;
     font-weight: bold;
     text-align: center;
-    min-height: 37px;
+    min-height: 15px;
     box-sizing: border-box;
 }
 
