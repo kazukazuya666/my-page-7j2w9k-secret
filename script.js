@@ -78,33 +78,91 @@ function renderHomeLinks() {
     grid.appendChild(gateBtn);
 }
 
-// --- 編集画面の描画（並べ替え・編集機能付き） ---
+
+// --- 並べ替え・編集機能の完全版 ---
+
+// 1. 順番を入れ替える
+function moveLink(index, direction) {
+    // 編集中のモード（表か裏か）に合わせてリストを選択
+    const list = isUraEditorMode ? uraLinks : links;
+    const newIndex = index + direction;
+
+    // 範囲外なら何もしない
+    if (newIndex < 0 || newIndex >= list.length) return;
+
+    // 要素を入れ替え（スワップ）
+    const temp = list[index];
+    list[index] = list[newIndex];
+    list[newIndex] = temp;
+
+    saveLinks();        // 保存
+    renderEditorList(); // 編集画面を再描画
+    renderHomeLinks();   // ホーム画面も即座に反映
+}
+
+// 2. 名前とURLを書き換える
+function editLinkContent(index) {
+    const list = isUraEditorMode ? uraLinks : links;
+    const item = list[index];
+
+    const newName = prompt("名前を変更:", item.name);
+    if (newName === null) return; // キャンセルなら終了
+
+    const newUrl = prompt("URLを変更:", item.url);
+    if (newUrl === null) return; // キャンセルなら終了
+
+    // 内容を更新
+    list[index] = { name: newName, url: newUrl };
+
+    saveLinks();
+    renderEditorList();
+    renderHomeLinks();
+}
+
+// 3. リンクを削除する
+function deleteLink(index) {
+    if (!confirm("本当に削除しますか？")) return;
+    
+    const list = isUraEditorMode ? uraLinks : links;
+    list.splice(index, 1); // 指定した番号を1つ消す
+
+    saveLinks();
+    renderEditorList();
+    renderHomeLinks();
+}
+
+
+
+
 function renderEditorList() {
     const list = document.getElementById('editor-link-list');
     const title = document.getElementById('editor-title');
+    if (!list) return;
+
     const currentList = isUraEditorMode ? uraLinks : links;
     title.innerText = isUraEditorMode ? "🔒 裏編集" : "🔗 リンク編集";
+    
     list.innerHTML = "";
-
     currentList.forEach((link, i) => {
         const item = document.createElement('div');
-        item.style = "display:flex; align-items:center; background:#444; padding:8px; border-radius:10px; margin-bottom:8px; gap:8px;";
+        // スマホでも操作しやすいように高さを確保したスタイル
+        item.style = "display:flex; align-items:center; background:#444; padding:10px; border-radius:10px; margin-bottom:8px; gap:10px; border:1px solid #555;";
         
-        // 並べ替えボタン、内容編集、削除の3セット
         item.innerHTML = `
-            <div style="display:flex; flex-direction:column; gap:2px;">
-                <button onclick="moveLink(${i}, -1)" style="background:#555; color:white; border:none; padding:2px 5px; font-size:10px;">▲</button>
-                <button onclick="moveLink(${i}, 1)" style="background:#555; color:white; border:none; padding:2px 5px; font-size:10px;">▼</button>
+            <div style="display:flex; flex-direction:column; gap:5px;">
+                <button onclick="moveLink(${i}, -1)" style="background:#666; color:white; border:none; border-radius:4px; padding:5px 8px; font-size:12px;">▲</button>
+                <button onclick="moveLink(${i}, 1)" style="background:#666; color:white; border:none; border-radius:4px; padding:5px 8px; font-size:12px;">▼</button>
             </div>
-            <div onclick="editLinkContent(${i})" style="flex:1; cursor:pointer;">
-                <div style="font-weight:bold; font-size:0.85rem; color:white;">${link.name}</div>
-                <div style="font-size:0.6rem; color:#aaa;">${link.url}</div>
+            <div onclick="editLinkContent(${i})" style="flex:1; cursor:pointer; min-width:0;">
+                <div style="font-weight:bold; font-size:0.9rem; color:white; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${link.name}</div>
+                <div style="font-size:0.7rem; color:#888; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${link.url}</div>
             </div>
-            <button onclick="deleteLink(${i})" style="color:#ff2e63; background:none; border:none; font-size:1.2rem;">×</button>
+            <button onclick="deleteLink(${i})" style="background:none; border:none; color:#ff2e63; font-size:1.8rem; padding:0 10px;">×</button>
         `;
         list.appendChild(item);
     });
 }
+
 
 // 順番を入れ替える関数
 function moveLink(index, direction) {
@@ -586,17 +644,45 @@ window.onload = () => {
     initTimetable();
 };
 
-// showPage関数も更新して、時間割タブが押された時に初期化するようにします
 function showPage(pageId) {
     document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
-    document.getElementById(pageId).classList.add('active');
+    const target = document.getElementById(pageId);
+    if (target) target.classList.add('active');
     
-    if (pageId === 'home') updateHomeTodayEvent();
+    // ホーム画面に切り替わった時に、リンクを強制的に描画する
+    if (pageId === 'home') {
+        updateHomeTodayEvent(); // 今日の予定
+        renderHomeLinks();      // ★ここが重要！リンクをここで描画
+    }
     if (pageId === 'calendar') createCalendar();
-    if (pageId === 'timetable') initTimetable(); // 追加
+    if (pageId === 'timetable') initTimetable();
     
     window.scrollTo(0, 0);
 }
+
+
+window.onload = () => {
+    updateClock();
+    setInterval(updateClock, 1000);
+    
+    // 初期化
+    createCalendar();
+    initIdeas();
+    initStickies();
+    initTodo();
+    updateHomeTodayEvent();
+    initTimetable();
+
+    // ★ページを開いた瞬間にリンクを表示する
+    renderHomeLinks(); 
+
+    const memoElem = document.getElementById('daily-memo');
+    if (memoElem) memoElem.value = localStorage.getItem('daily-memo') || "";
+    
+    // 最後にホームを表示
+    showPage('home');
+};
+
 
 
 
