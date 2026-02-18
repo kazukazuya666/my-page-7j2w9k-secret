@@ -1,6 +1,6 @@
 // --- セキュリティ：初回アクセス時のみパスワードを要求 ---
 (function() {
-    const SECRET_KEY = "5566"; // ★好きなパスワードに変えてください
+    const SECRET_KEY = "harakazu5566"; // ★好きなパスワードに変えてください
     const AUTH_ID = "my_dashboard_authenticated";
 
     // すでに認証済み（このデバイスのブラウザに記録がある）なら何もしない
