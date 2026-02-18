@@ -39,15 +39,19 @@ let isUraView = false;
 let isUraEditorMode = false;
 
 function renderHomeLinks() {
-    // HTML側で設定した ID (link-grid-container) を取得
     const grid = document.getElementById('link-grid-container');
     const title = document.getElementById('link-section-title');
     
-    if (!grid) return; // 要素がない場合は何もしない
+    if (!grid) return;
     
     grid.innerHTML = ""; 
     const currentList = isUraView ? uraLinks : links;
-    if(title) title.innerText = isUraView ? "🔒 裏リンク集" : "クイックリンク";
+
+    // タイトルの文字だけを更新（編集ボタンを消さないように）
+    if(title) {
+        title.innerText = isUraView ? "🔒 裏リンク集" : "クイックリンク";
+    }
+
 
     // 1. 保存されたリンクを生成
     currentList.forEach(link => {
