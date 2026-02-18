@@ -47,23 +47,33 @@ h2 { margin-top: 0; font-size: 1rem; border-left: 4px solid var(--accent); paddi
     margin-top: 15px;
 }
 
-/* 各リンク（ボタン）の見た目 */
+/* 各リンク（ボタン）の見た目 - さらにスリム版 */
 .link-grid .btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2px 2px;
-    background: rgba(255, 255, 255, 0.05); /* ほんのり背景色 */
-    border: 1px solid #444 !important; /* ★ここで枠線を強制する */
-    border-radius: 12px;
+    
+    /* 1. 上下の余白を極限まで削る */
+    padding: 2px 2px !important; 
+
+    /* 2. 【最重要】ここを小さく（または0に）すると四角が細くなります */
+    min-height: 28px !important; 
+
+    /* 3. 文字サイズ（お好みで調整してください） */
+    font-size: 0.8rem; 
+    
+    /* --- 雰囲気維持 --- */
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid #444 !important;
+    border-radius: 8px; /* 少し細くなるので、角丸も少し小さく(12→8)すると綺麗です */
     color: white;
     text-decoration: none;
-    font-size: 0.7rem;
     font-weight: bold;
     text-align: center;
-    min-height: 40px;
     box-sizing: border-box;
+    line-height: 1.0; /* 文字の上下の隙間を消す */
 }
+
 
 
 /* 既存の .btn デザインはそのままに、2マス幅用だけ追加 */
