@@ -324,6 +324,14 @@ button:not(.quick-link-btn),
 
 
 
+/* 2マス使うときの設定 */
+.quick-link-btn.span-2 {
+    grid-column: span 2 !important;
+    width: 100% !important; /* スマホで確実に横いっぱいに広げる */
+}
+
+
+
 
 
 /* スマホ（画面幅が480px以下）の場合だけ適用する設定 */

@@ -41,7 +41,7 @@ let gateName = localStorage.getItem('gate-name') || "リンク設定";
 let isUraView = false;
 let isUraEditorMode = false;
 
-// --- クイックリンクの描画（ここを差し替え） ---
+// --- クイックリンクの描画（自動レイアウト版） ---
 function renderHomeLinks() {
     const grid = document.getElementById('link-grid-container');
     const title = document.getElementById('link-section-title');
@@ -51,34 +51,88 @@ function renderHomeLinks() {
     const currentList = isUraView ? uraLinks : links;
     if(title) title.innerText = isUraView ? "🔒 裏リンク集" : "クイックリンク";
 
-    // リンクボタンの作成
+    // 1. リンクボタンの作成
     currentList.forEach(link => {
         const a = document.createElement('a');
         a.href = link.url;
-        a.className = "quick-link-btn"; // 専用クラスを使用
+        a.className = "quick-link-btn";
         a.target = "_blank";
         a.innerText = link.name;
         grid.appendChild(a);
     });
 
-    // 扉ボタン（裏への切り替え）
+    // 2. 「リンク設定」ボタンの作成（自動スパン判定）
     const gateBtn = document.createElement('a');
     gateBtn.href = "javascript:void(0)";
-    gateBtn.className = "quick-link-btn span-2";
+    
+    // ★リンクが偶数なら2マス(span-2)、奇数なら1マスにする
+    const isEven = currentList.length % 2 === 0;
+    gateBtn.className = isEven ? "quick-link-btn span-2" : "quick-link-btn";
+    
     gateBtn.innerText = isUraView ? "↩ 表に戻る" : gateName;
     gateBtn.onclick = (e) => {
         e.preventDefault();
         isUraView = !isUraView;
         renderHomeLinks();
     };
-    // 右クリックで名前変更
-    gateBtn.oncontextmenu = (e) => {
-        e.preventDefault();
-        const n = prompt("名前変更:", gateName);
-        if(n) { gateName = n; localStorage.setItem('gate-name', n); renderHomeLinks(); }
-    };
     grid.appendChild(gateBtn);
 }
+
+// --- 編集画面の描画（並べ替え・編集機能付き） ---
+function renderEditorList() {
+    const list = document.getElementById('editor-link-list');
+    const title = document.getElementById('editor-title');
+    const currentList = isUraEditorMode ? uraLinks : links;
+    title.innerText = isUraEditorMode ? "🔒 裏編集" : "🔗 リンク編集";
+    list.innerHTML = "";
+
+    currentList.forEach((link, i) => {
+        const item = document.createElement('div');
+        item.style = "display:flex; align-items:center; background:#444; padding:8px; border-radius:10px; margin-bottom:8px; gap:8px;";
+        
+        // 並べ替えボタン、内容編集、削除の3セット
+        item.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:2px;">
+                <button onclick="moveLink(${i}, -1)" style="background:#555; color:white; border:none; padding:2px 5px; font-size:10px;">▲</button>
+                <button onclick="moveLink(${i}, 1)" style="background:#555; color:white; border:none; padding:2px 5px; font-size:10px;">▼</button>
+            </div>
+            <div onclick="editLinkContent(${i})" style="flex:1; cursor:pointer;">
+                <div style="font-weight:bold; font-size:0.85rem; color:white;">${link.name}</div>
+                <div style="font-size:0.6rem; color:#aaa;">${link.url}</div>
+            </div>
+            <button onclick="deleteLink(${i})" style="color:#ff2e63; background:none; border:none; font-size:1.2rem;">×</button>
+        `;
+        list.appendChild(item);
+    });
+}
+
+// 順番を入れ替える関数
+function moveLink(index, direction) {
+    const list = isUraEditorMode ? uraLinks : links;
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= list.length) return;
+    
+    // 要素を入れ替え
+    [list[index], list[newIndex]] = [list[newIndex], list[index]];
+    saveLinks();
+    renderEditorList();
+}
+
+// 既存のリンクを修正する関数
+function editLinkContent(index) {
+    const list = isUraEditorMode ? uraLinks : links;
+    const item = list[index];
+    
+    const newName = prompt("名前を変更:", item.name);
+    if (newName === null) return;
+    const newUrl = prompt("URLを変更:", item.url);
+    if (newUrl === null) return;
+
+    list[index] = { name: newName, url: newUrl };
+    saveLinks();
+    renderEditorList();
+}
+
 
 // --- 編集画面の機能 ---
 function openLinkEditor() {
