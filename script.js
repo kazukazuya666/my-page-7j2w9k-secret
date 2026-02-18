@@ -1,3 +1,36 @@
+// --- セキュリティ：初回アクセス時のみパスワードを要求 ---
+(function() {
+    const SECRET_KEY = "5566"; // ★好きなパスワードに変えてください
+    const AUTH_ID = "my_dashboard_authenticated";
+
+    // すでに認証済み（このデバイスのブラウザに記録がある）なら何もしない
+    if (localStorage.getItem(AUTH_ID) === "true") {
+        return;
+    }
+
+    // まだ認証されていない場合のみ、パスワードを聞く
+    let pass = prompt("新しいデバイスを検知しました。パスワードを入力してください。");
+
+    if (pass === SECRET_KEY) {
+        // パスワードが合っていれば、このブラウザに「許可」を保存する
+        localStorage.setItem(AUTH_ID, "true");
+        alert("認証に成功しました。次からは入力を省略します。");
+    } else {
+        // 間違っていたら画面を真っ白にする
+        alert("パスワードが違います。アクセスできません。");
+        document.body.innerHTML = `
+            <div style="background:#1a1a1a; color:white; height:100vh; display:flex; align-items:center; justify-content:center; font-family:sans-serif;">
+                <div style="text-align:center;">
+                    <h1>🔒 Access Denied</h1>
+                    <p>正しいパスワードが必要です。</p>
+                    <button onclick="location.reload()" style="background:var(--accent); color:white; border:none; padding:10px 20px; border-radius:10px;">再試行</button>
+                </div>
+            </div>`;
+    }
+})();
+
+
+
 let displayDate = new Date();
 let selectedFullDate = "";
 
