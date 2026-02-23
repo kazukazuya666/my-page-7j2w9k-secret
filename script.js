@@ -49,7 +49,7 @@ function renderHomeLinks() {
     
     grid.innerHTML = "";
     const currentList = isUraView ? uraLinks : links;
-    if(title) title.innerText = isUraView ? "🔒 裏リンク集" : "クイックリンク";
+    if(title) title.innerText = isUraView ? "リンク設定" : "クイックリンク";
 
     // 1. リンクボタンの作成
     currentList.forEach(link => {
