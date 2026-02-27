@@ -1,19 +1,83 @@
-:root { --main-bg: #1a1a1a; --card-bg: #2d2d2d; --text: #ffffff; --accent: #00adb5; --today: #ff2e63; }
-body { background: var(--main-bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 20px; padding-bottom: 90px; }
+/* ==========================================
+   1. 基本設定（変数・全体レイアウト）
+   ========================================== */
+:root {
+    --main-bg: #1a1a1a;
+    --card-bg: #2d2d2d;
+    --text: #ffffff;
+    --accent: #00adb5;
+    --today: #ff2e63;
+}
 
-.header { text-align: center; margin-bottom: 20px; }
-#date { font-size: 1.1rem; color: #aaa; }
-#clock { font-size: 2.2rem; font-weight: bold; color: var(--accent); font-family: monospace; }
+body {
+    background: var(--main-bg);
+    color: var(--text);
+    font-family: sans-serif;
+    margin: 0;
+    padding: 20px;
+    padding-bottom: 90px; /* ナビメニュー分の余白 */
+}
 
-.section { background: var(--card-bg); border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-h2 { margin-top: 0; font-size: 1rem; border-left: 4px solid var(--accent); padding-left: 10px; margin-bottom: 12px; }
+/* 共通セクション */
+.section {
+    background: var(--card-bg);
+    border-radius: 15px;
+    padding: 15px !important;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
 
-/* ページ切り替えの仕組み */
-.page-content { display: none; }
-.page-content.active { display: block; animation: fadeIn 0.3s; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+h2 {
+    margin-top: 0;
+    font-size: 1rem;
+    border-left: 4px solid var(--accent);
+    padding-left: 10px;
+    margin-bottom: 12px;
+}
 
-/* タブメニュー */
+/* ==========================================
+   2. ヘッダー（時計・日付表示）
+   ========================================== */
+.header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#date {
+    font-size: 1.1rem;
+    color: #aaa;
+}
+
+#clock {
+    font-size: 2.2rem;
+    font-weight: bold;
+    color: var(--accent);
+    font-family: monospace;
+}
+
+/* ==========================================
+   3. ページ切り替えアニメーション
+   ========================================== */
+.page-content {
+    display: none;
+}
+
+.page-content.active {
+    display: block;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ==========================================
+   4. 下部タブメニュー
+   ========================================== */
 .tab-menu {
     position: fixed;
     bottom: 0;
@@ -23,53 +87,68 @@ h2 { margin-top: 0; font-size: 1rem; border-left: 4px solid var(--accent); paddi
     display: flex;
     justify-content: space-around;
     padding: 10px 0;
-    /* --- ここが重要 --- */
     padding-bottom: calc(10px + env(safe-area-inset-bottom)); 
     border-top: 1px solid #444;
     z-index: 1000;
 }
 
-.tab-menu button { background: none; border: none; color: #888; font-size: 10px; padding: 10px; width: 25%; }
-.tab-menu button:focus { color: var(--accent); }
+.tab-menu button {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 10px;
+    padding: 10px;
+    width: 25%;
+}
 
+.tab-menu button:focus {
+    color: var(--accent);
+}
 
-/* カレンダー関連 */
-.calendar-table { width: 100%; text-align: center; }
-.calendar-table td { padding: 12px 0; border-radius: 8px; cursor: pointer; }
-.calendar-table td.today { background: var(--today); color: white; }
-.calendar-table td.selected { border: 2px solid var(--accent); }
-.has-event::after { content: ''; display: block; width: 5px; height: 5px; background: var(--accent); border-radius: 50%; margin: 2px auto 0; }
+/* ==========================================
+   5. カレンダー セクション
+   ========================================== */
+.calendar-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    margin-bottom: 15px;
+}
 
-.link-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.btn { background: #3d3d3d; color: white; text-decoration: none; padding: 12px; border-radius: 10px; text-align: center; font-size: 0.8rem; }
-textarea { width: 100%; background: #3d3d3d; border: 1px solid var(--accent); color: white; border-radius: 10px; padding: 10px; box-sizing: border-box; outline: none; }
+#calendar-month {
+    margin: 0;
+    font-size: 1.2rem;
+    white-space: nowrap;
+    border: none;
+    padding: 0;
+}
 
-.sticky-note { padding: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); color: #333; position: relative; margin-bottom: 5px; }
-.sticky-note textarea { background: transparent !important; border: none !important; color: #333 !important; }
+.calendar-table {
+    width: 100%;
+    text-align: center;
+}
 
-/* 1. 基本の日付セル */
-td {
+.calendar-table td {
     padding: 10px;
     text-align: center;
     cursor: pointer;
-    border-radius: 8px; /* 角を少し丸くすると今風になります */
-    position: relative; /* ドット（印）を出すための基準 */
+    border-radius: 8px;
+    position: relative;
 }
 
-/* 2. 「今日」のデザイン（赤系） */
-td.today {
-    background-color: rgba(255, 46, 99, 0.2); /* ほんのり赤 */
-    color: #ff2e63;                          /* 文字を赤く */
+/* 今日・予定あり・選択中のデザイン */
+.calendar-table td.today {
+    background-color: rgba(255, 46, 99, 0.2);
+    color: #ff2e63;
     font-weight: bold;
 }
 
-/* 3. 「予定あり」のデザイン（青・緑系） */
-/* 文字色を変えるだけでなく、下に小さなドットを出すと「今日」と重なっても見やすいです */
-td.has-event {
-    color: var(--accent); /* 予定がある日はメインカラーにする */
+.calendar-table td.has-event {
+    color: var(--accent);
 }
 
-td.has-event::after {
+.calendar-table td.has-event::after {
     content: '';
     position: absolute;
     bottom: 4px;
@@ -77,44 +156,58 @@ td.has-event::after {
     transform: translateX(-50%);
     width: 4px;
     height: 4px;
-    background-color: #00d5ff; /* 小さなドットを表示 */
+    background-color: #00d5ff;
     border-radius: 50%;
 }
 
-/* 4. 「今日」かつ「予定あり」の重なり設定 */
-/* ここが重要！重なっても両方の特徴が出るようにします */
-td.today.has-event {
-    background-color: rgba(255, 46, 99, 0.3); /* 背景は赤を維持 */
-    box-shadow: inset 0 0 0 2px var(--accent); /* 内側に予定ありの色の枠線を出す */
+.calendar-table td.today.has-event {
+    background-color: rgba(255, 46, 99, 0.3);
+    box-shadow: inset 0 0 0 2px var(--accent);
 }
 
-td.selected {
+.calendar-table td.selected {
     background-color: #0d075d !important;
     color: white !important;
-    border: none !important; /* 枠線を消して塗りつぶしに専念 */
+    border: none !important;
 }
 
-
-
-
-/* カレンダーのヘッダーを横一列に整列 */
-.calendar-header {
-    display: flex;
-    justify-content: center; /* 中央に寄せる */
-    align-items: center;
-    gap: 30px;               /* 矢印と月の間の距離 */
-    margin-bottom: 15px;
+/* ==========================================
+   6. クイックリンク セクション
+   ========================================== */
+.link-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
 }
 
-#calendar-month {
-    margin: 0;
-    font-size: 1.2rem;
-    white-space: nowrap;    /* 改行させない */
-    border: none;
-    padding: 0;
+.quick-link-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 32px !important;
+    font-size: 0.9rem !important;
+    padding: 0 4px !important;
+    margin: 0 !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid #444 !important;
+    border-radius: 10px !important;
+    color: white !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
-/* ToDoアイテムのデザイン */
+.quick-link-btn.span-2 {
+    grid-column: span 2 !important;
+    width: 100% !important;
+}
+
+/* ==========================================
+   7. ToDoリスト セクション
+   ========================================== */
 .todo-item {
     display: flex;
     align-items: center;
@@ -124,11 +217,22 @@ td.selected {
     margin-bottom: 6px;
     border: 1px solid #444;
 }
-.todo-item.completed { opacity: 0.5; background: #252525; }
-.todo-item span { flex: 1; margin-left: 10px; font-size: 0.9rem; }
-.todo-item.completed span { text-decoration: line-through; }
 
-/* フィルターボタンのデザイン */
+.todo-item.completed {
+    opacity: 0.5;
+    background: #252525;
+}
+
+.todo-item span {
+    flex: 1;
+    margin-left: 10px;
+    font-size: 0.9rem;
+}
+
+.todo-item.completed span {
+    text-decoration: line-through;
+}
+
 .filter-btn {
     flex: 1;
     background: #3d3d3d;
@@ -138,50 +242,16 @@ td.selected {
     border-radius: 6px;
     font-size: 0.75rem;
 }
-.filter-btn.active { background: var(--accent); color: white; }
 
-
-/* --- 合体ページ（notes-all）用の調整 --- */
-
-/* セクションごとの余白をしっかり取る */
-#notes-all .section {
-    margin-bottom: 30px; 
-    border-bottom: 1px solid #444;
-    padding-bottom: 20px;
+.filter-btn.active {
+    background: var(--accent);
+    color: white;
 }
 
-/* 付箋が横に並ぶようにする設定 */
-#sticky-container {
-    display: flex;
-    flex-wrap: wrap; /* 横幅がいっぱいになったら折り返す */
-    gap: 15px;      /* 付箋同士の隙間 */
-    margin-top: 10px;
-}
-
-/* 付箋自体のサイズ調整（スマホで見やすく） */
-.sticky-note {
-    position: relative;
-    border-radius: 8px;
-    padding: 10px;
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-    width: 90px !important;  /* サイズを少しコンパクトに */
-    height: 90px !important;
-}
-
-.sticky-note textarea {
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    border: none;
-    color: #333;
-    font-size: 0.8rem;
-    resize: none;
-    padding: 0;
-    line-height: 1.2;
-}
-
-/* ネタ帳とメモのテキストエリアを使いやすく */
-#idea-note, #daily-memo {
+/* ==========================================
+   8. ノート・メモ・付箋 セクション
+   ========================================== */
+#daily-memo, #idea-note {
     width: 100%;
     background: #222;
     color: white;
@@ -189,30 +259,75 @@ td.selected {
     border-radius: 10px;
     padding: 12px;
     font-size: 0.95rem;
+    box-sizing: border-box;
+    outline: none;
 }
 
+#sticky-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 10px;
+}
 
+.sticky-note {
+    position: relative;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    width: 90px !important;
+    height: 90px !important;
+}
+
+.sticky-note textarea {
+    width: 100%;
+    height: 100%;
+    background: transparent !important;
+    border: none !important;
+    color: #333 !important;
+    font-size: 0.8rem;
+    resize: none;
+    padding: 0;
+    line-height: 1.2;
+}
+
+/* ==========================================
+   9. 時間割 セクション
+   ========================================== */
+.timetable-scroll-wrapper {
+    width: 100%;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid #444;
+    border-radius: 10px;
+    margin-top: 10px;
+    background: #222;
+}
 
 .timetable-table {
     width: 100%;
-    min-width: 350px; /* スマホで潰れないための最低幅 */
+    table-layout: auto; 
     border-collapse: collapse;
-    table-layout: fixed;
 }
 
-.timetable-table th, .timetable-table td {
+.timetable-table th, 
+.timetable-table td {
     border: 1px solid #444;
-    height: 80px; /* 高さをしっかり確保 */
+    height: 80px;
     text-align: center;
-    vertical-align: middle;
-    padding: 2px;
-    background: rgba(255,255,255,0.03);
-    word-break: break-all; /* 長い名前でも改行させる */
+    padding: 8px;
+    min-width: 100px; 
+    box-sizing: border-box;
 }
 
-/* 1列目（時限）のスタイル */
+.timetable-table th:first-child, 
 .timetable-table td:first-child {
+    min-width: 40px;
+    width: 40px;
     background: #333;
+    position: sticky;
+    left: 0;
+    z-index: 10;
     font-weight: bold;
     color: var(--accent);
 }
@@ -232,127 +347,47 @@ td.selected {
     margin-top: 4px;
 }
 
-
-/* 外枠：ここがスクロールの窓になります */
-.timetable-scroll-wrapper {
-    width: 100%;
-    overflow-x: auto !important; /* 強制的にスクロールを許可 */
-    -webkit-overflow-scrolling: touch;
-    border: 1px solid #444;
+/* ==========================================
+   10. フォーム要素・その他ボタン
+   ========================================== */
+.btn {
+    background: #3d3d3d;
+    color: white;
+    text-decoration: none;
+    padding: 12px;
     border-radius: 10px;
-    margin-top: 10px;
-    background: #222; /* 背景色をつけておくと見やすい */
-}
-
-/* テーブル本体 */
-.timetable-table {
-    width: 100%;
-    /* table-layout: fixed; は削除するか auto にします */
-    table-layout: auto; 
-    border-collapse: collapse;
-}
-
-/* 各マスの設定 */
-.timetable-table th, 
-.timetable-table td {
-    border: 1px solid #444;
-    height: 80px;
     text-align: center;
-    padding: 8px;
-    /* ★ここが最重要！ 各マスの「最低幅」をしっかり指定する */
-    min-width: 100px; 
+    font-size: 0.8rem;
+}
+
+textarea {
+    width: 100%;
+    background: #3d3d3d;
+    border: 1px solid var(--accent);
+    color: white;
+    border-radius: 10px;
+    padding: 10px;
     box-sizing: border-box;
+    outline: none;
 }
 
-/* 1列目（時限）だけは細くていい */
-.timetable-table th:first-child, 
-.timetable-table td:first-child {
-    min-width: 40px;
-    width: 40px;
-    background: #333;
-    position: sticky; /* スクロールしても時限だけ左に固定されるとお洒落です */
-    left: 0;
-    z-index: 10;
-}
-
-
-
-
-
-/* --- 1. クイックリンク専用（ここだけを狙い撃ち） --- */
-.link-grid {
-    display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important; /* 絶対に2列 */
-    gap: 8px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-}
-
-.quick-link-btn {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    height: 32px !important;       /* 高さを固定してズレを防ぐ */
-    font-size: 0.9rem !important;
-    padding: 0 4px !important;
-    margin: 0 !important;          /* 余計なマージンを排除 */
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid #444 !important;
-    border-radius: 10px !important;
-    color: white !important;
-    text-decoration: none !important;
-    white-space: nowrap !important; /* 改行を禁止して1行に収める */
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-}
-
-/* --- 2. カレンダー・メモ・ToDoを「元のサイズ」に強制復元 --- */
-/* クイックリンク以外のボタン（.nav-btnやbuttonタグ）は標準サイズに固定 */
 button:not(.quick-link-btn), 
-.nav-btn, 
-.filter-btn {
-    min-height: 44px !important; /* スマホで押しやすい標準の高さ */
-    width: auto !important;      /* 勝手に広がらないようにする */
+.nav-btn {
+    min-height: 44px !important;
+    width: auto !important;
 }
 
-/* セクションの幅を安定させる */
-.section {
-    width: 100% !important;
-    box-sizing: border-box !important;
-    overflow: hidden !important; /* はみ出しを許さない */
-}
-
-
-
-/* 2マス使うときの設定 */
-.quick-link-btn.span-2 {
-    grid-column: span 2 !important;
-    width: 100% !important; /* スマホで確実に横いっぱいに広げる */
-}
-
-
-
-
-
-/* スマホ（画面幅が480px以下）の場合だけ適用する設定 */
+/* スマホ最適化 */
 @media screen and (max-width: 480px) {
-    /* 1. ボタン同士の隙間を少し詰める */
     .link-grid {
         gap: 6px !important; 
     }
-
-    /* 2. ボタンの中身をスマホに最適化 */
     .quick-link-btn {
-        font-size: 0.85rem !important; /* 文字を少しだけ小さくして1行に収める */
-        height: 32px !important;       /* 高さを少しだけ出すと押しやすくなる */
-        padding: 0 4px !important;     /* 左右の余白を最小限に */
-        white-space: nowrap;           /* 文字を絶対に改行させない */
-        overflow: hidden;              /* はみ出た文字を隠す */
-        text-overflow: ellipsis;       /* 長すぎる名前は「...」にする */
-    }
-
-    /* 3. セクション全体の左右余白を少し削ってボタンの幅を確保 */
-    .section {
-        padding: 10px !important;
+        font-size: 0.85rem !important;
+        height: 32px !important;
+        padding: 0 4px !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 }
