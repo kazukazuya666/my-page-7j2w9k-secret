@@ -79,11 +79,16 @@ function showPage(pageId) {
         updateHomeTodayEvent();
         renderHomeLinks();
     }
+    // ★ここを追加！ シフトページを開いたらリストを即座に作る
+    if (pageId === 'shift') {
+        initShift();
+    }
     if (pageId === 'calendar') createCalendar();
     if (pageId === 'timetable') initTimetable();
     
     window.scrollTo(0, 0);
 }
+
 
 /* ==========================================
    4. クイックリンク機能
@@ -573,27 +578,164 @@ function editTimetableSlot(sem, key, oldSub, oldPlace) {
     initTimetable();
 }
 
+
 /* ==========================================
-   9. 初期化処理（システムの起動）
+   9. シフト管理機能（修正・安定版）
+   ========================================== */
+let shiftData = JSON.parse(localStorage.getItem('shift-data')) || {};
+let tempShiftData = {}; 
+let editingDate = 1; 
+let currentShiftDate = new Date(); 
+let isWorkingTemp = false;
+
+// 1. ドラムロールの選択肢（00-23, 00-59）を生成
+function setupDrumRolls() {
+    const hours = ["s-hour", "e-hour"];
+    const mins = ["s-min", "e-min"];
+    
+    hours.forEach(id => {
+        const sel = document.getElementById(id);
+        if(!sel || sel.options.length > 0) return;
+        for(let i=0; i<24; i++) {
+            let val = i.toString().padStart(2, '0');
+            sel.add(new Option(val, val));
+        }
+    });
+    mins.forEach(id => {
+        const sel = document.getElementById(id);
+        if(!sel || sel.options.length > 0) return;
+        for(let i=0; i<60; i++) {
+            let val = i.toString().padStart(2, '0');
+            sel.add(new Option(val, val));
+        }
+    });
+}
+
+// 2. 出勤・休みの切り替え
+function setWorkStatus(status) {
+    isWorkingTemp = status;
+    const btnOn = document.getElementById('btn-work-on');
+    const btnOff = document.getElementById('btn-work-off');
+    const timeUI = document.getElementById('shift-time-ui');
+    
+    if(status) {
+        btnOn.style.background = "var(--accent)"; // 出勤：アクセントカラー
+        btnOff.style.background = "#444";
+        timeUI.style.opacity = "1";
+        timeUI.style.pointerEvents = "auto";
+    } else {
+        btnOn.style.background = "#444";
+        btnOff.style.background = "#ff4444"; // 休み：赤
+        timeUI.style.opacity = "0.2";
+        timeUI.style.pointerEvents = "none";
+    }
+}
+
+// 3. エディタを開く
+function openShiftEditor(day) {
+    setupDrumRolls(); // 選択肢を生成
+    editingDate = day;
+    const year = currentShiftDate.getFullYear();
+    const month = currentShiftDate.getMonth() + 1;
+    const monthKey = `${year}-${month}`;
+    
+    // メモリに現在のデータをロード
+    tempShiftData = JSON.parse(JSON.stringify(shiftData[monthKey] || {}));
+    
+    updateEditorUI();
+    document.getElementById('shift-editor-modal').style.display = 'block';
+}
+
+// 4. エディタの表示更新
+function updateEditorUI() {
+    const year = currentShiftDate.getFullYear();
+    const month = currentShiftDate.getMonth() + 1;
+    const dateObj = new Date(year, month - 1, editingDate);
+    const days = ["日", "月", "火", "水", "木", "金", "土"];
+    
+    document.getElementById('edit-date-display').innerText = `${month}月 ${editingDate}日 (${days[dateObj.getDay()]})`;
+    
+    const data = tempShiftData[editingDate] || { work: false, s: "09:00", e: "18:00" };
+    
+    // 状態反映
+    setWorkStatus(data.work);
+    
+    // 時間反映（09:00 形式を分割してセット）
+    const sParts = data.s.split(':');
+    const eParts = data.e.split(':');
+    
+    document.getElementById('s-hour').value = sParts[0];
+    document.getElementById('s-min').value = sParts[1];
+    document.getElementById('e-hour').value = eParts[0];
+    document.getElementById('e-min').value = eParts[1];
+}
+
+// 5. 保存ロジック
+function saveToMemory() {
+    const sh = document.getElementById('s-hour').value;
+    const sm = document.getElementById('s-min').value;
+    const eh = document.getElementById('e-hour').value;
+    const em = document.getElementById('e-min').value;
+
+    tempShiftData[editingDate] = {
+        work: isWorkingTemp,
+        s: `${sh}:${sm}`,
+        e: `${eh}:${em}`
+    };
+}
+
+function moveShiftDate(diff) {
+    saveToMemory();
+    const year = currentShiftDate.getFullYear();
+    const month = currentShiftDate.getMonth() + 1;
+    const daysInMonth = new Date(year, month, 0).getDate();
+    
+    let nextDate = editingDate + diff;
+    if (nextDate < 1 || nextDate > daysInMonth) return;
+
+    commitTempToPermanent(); // 矢印移動で保存
+    editingDate = nextDate;
+    updateEditorUI();
+}
+
+function commitTempToPermanent() {
+    const year = currentShiftDate.getFullYear();
+    const month = currentShiftDate.getMonth() + 1;
+    const monthKey = `${year}-${month}`;
+    shiftData[monthKey] = JSON.parse(JSON.stringify(tempShiftData));
+    localStorage.setItem('shift-data', JSON.stringify(shiftData));
+}
+
+function closeShiftEditor(isSave) {
+    if (isSave) {
+        saveToMemory();
+        commitTempToPermanent();
+    }
+    document.getElementById('shift-editor-modal').style.display = 'none';
+    initShift();
+}
+
+
+
+/* ==========================================
+   10. 初期化処理（システムの起動）
    ========================================== */
 window.onload = () => {
-    // 1. 時計開始
     updateClock();
     setInterval(updateClock, 1000);
     
-    // 2. 各コンポーネントの初期化
+    // 各コンポーネントの初期化
     createCalendar();
     initIdeas();
     initStickies();
     initTodo();
     updateHomeTodayEvent();
     initTimetable();
+    initShift(); // ★ここを追加！ 起動時にデータを用意しておく
     renderHomeLinks();
 
-    // 3. ストレージデータの復元
     const memoElem = document.getElementById('daily-memo');
     if (memoElem) memoElem.value = localStorage.getItem('daily-memo') || "";
 
-    // 4. 初期表示（ホーム）
     showPage('home');
 };

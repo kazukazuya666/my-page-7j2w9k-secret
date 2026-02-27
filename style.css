@@ -348,7 +348,33 @@ h2 {
 }
 
 /* ==========================================
-   10. フォーム要素・その他ボタン
+   10. シフト表
+   ========================================== */
+/* シフトリストの1行スタイル */
+.shift-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-bottom: 1px solid #444;
+    font-size: 0.85rem;
+}
+
+.shift-row .date-col { width: 50px; font-weight: bold; }
+.shift-row .day-col { width: 40px; }
+.shift-row .time-col { flex: 1; text-align: center; color: var(--accent); }
+.shift-row .edit-col { width: 50px; text-align: right; }
+
+/* 曜日別の色 */
+.day-sat { color: #008cff; } /* 土曜：青 */
+.day-sun { color: #ff4444; } /* 日曜：赤 */
+
+/* シフトなし（空白）の表示 */
+.time-col:empty::before { content: "---"; color: #555; }
+
+
+/* ==========================================
+   11. フォーム要素・その他ボタン
    ========================================== */
 .btn {
     background: #3d3d3d;
