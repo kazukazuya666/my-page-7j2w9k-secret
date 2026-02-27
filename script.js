@@ -1,9 +1,11 @@
-// --- 設定：あなたの情報を入れる ---
-const GITHUB_TOKEN = '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 ';
+/* ==========================================
+   0. 同期設定（GitHub Gist）
+   ========================================== */
+const GITHUB_TOKEN = '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';
 const GIST_ID = '094b64809122f383d20fcd235aeae11b';
 
 // --- Gistからデータを読み込む ---
-async function loadData() {
+async function loadAllDataFromGist() {
     try {
         const response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
@@ -11,23 +13,44 @@ async function loadData() {
         const gist = await response.json();
         const content = gist.files['data.json'].content;
         
-        // もしGistが空（{}）ならローカルから読み込む
-        if (content === '{}') {
-            return JSON.parse(localStorage.getItem('myDashboardData')) || {};
+        const cloudData = JSON.parse(content);
+        
+        // クラウドにデータがあれば、各LocalStorageを上書きする
+        if (Object.keys(cloudData).length > 0) {
+            for (let key in cloudData) {
+                localStorage.setItem(key, cloudData[key]);
+            }
+            console.log("クラウドから全データを同期しました。");
+            return true;
         }
-        return JSON.parse(content);
     } catch (e) {
         console.error("読み込みエラー:", e);
-        return JSON.parse(localStorage.getItem('myDashboardData')) || {};
     }
+    return false;
 }
 
-// --- Gistにデータを保存する ---
-async function saveData(data) {
-    // 1. まずブラウザに保存（バックアップ）
-    localStorage.setItem('myDashboardData', JSON.stringify(data));
+// --- Gistに全データを保存する（同期実行） ---
+async function syncToGist() {
+    // 同期したい全キーのリスト
+    const keys = [
+        'user-links', 'ura-links', 'gate-name', 'idea-pages', 
+        'sticky-notes', 'todo-data', 'timetable-data', 'shift-data', 'daily-memo'
+    ];
+    
+    // カレンダーの個別日付データ（数字-数字-数字の形式）をすべて集める
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.match(/^\d{4}-\d{1,2}-\d{1,2}$/)) {
+            keys.push(key);
+        }
+    }
 
-    // 2. Gistに保存（ネット同期）
+    const allData = {};
+    keys.forEach(key => {
+        const val = localStorage.getItem(key);
+        if (val) allData[key] = val;
+    });
+
     try {
         await fetch(`https://api.github.com/gists/${GIST_ID}`, {
             method: 'PATCH',
@@ -36,41 +59,31 @@ async function saveData(data) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                files: { 'data.json': { content: JSON.stringify(data) } }
+                files: { 'data.json': { content: JSON.stringify(allData) } }
             })
         });
-        console.log("同期完了！");
+        console.log("クラウド同期が完了しました！");
     } catch (e) {
         console.error("同期失敗:", e);
     }
 }
 
+
 /* ==========================================
    1. セキュリティ：初回アクセス認証
    ========================================== */
 (function() {
-    const SECRET_KEY = "harakazu5566"; // パスワード
+    const SECRET_KEY = "harakazu5566";
     const AUTH_ID = "my_dashboard_authenticated";
-
-    if (localStorage.getItem(AUTH_ID) === "true") {
-        return;
-    }
+    if (localStorage.getItem(AUTH_ID) === "true") return;
 
     let pass = prompt("新しいデバイスを検知しました。パスワードを入力してください。");
-
     if (pass === SECRET_KEY) {
         localStorage.setItem(AUTH_ID, "true");
-        alert("認証に成功しました。次からは入力を省略します。");
+        alert("認証に成功しました。");
     } else {
-        alert("パスワードが違います。アクセスできません。");
-        document.body.innerHTML = `
-            <div style="background:#1a1a1a; color:white; height:100vh; display:flex; align-items:center; justify-content:center; font-family:sans-serif;">
-                <div style="text-align:center;">
-                    <h1>🔒 Access Denied</h1>
-                    <p>正しいパスワードが必要です。</p>
-                    <button onclick="location.reload()" style="background:var(--accent); color:white; border:none; padding:10px 20px; border-radius:10px;">再試行</button>
-                </div>
-            </div>`;
+        alert("パスワードが違います。");
+        document.body.innerHTML = `<div style="background:#1a1a1a; color:white; height:100vh; display:flex; align-items:center; justify-content:center; font-family:sans-serif;"><h1>🔒 Access Denied</h1></div>`;
     }
 })();
 
@@ -103,6 +116,63 @@ let currentTodoFilter = 'all';
 let currentSemester = localStorage.getItem('current-semester') || "1年 前期";
 const semesters = ["1年 前期", "1年 後期", "2年 前期", "2年 後期", "3年 前期", "3年 後期", "4年 前期", "4年 後期"];
 let timetableData = JSON.parse(localStorage.getItem('timetable-data')) || {};
+
+
+/* ==========================================
+   3. 保存機能の書き換え（各保存時にGistへ送る）
+   ========================================== */
+function saveLinks() {
+    localStorage.setItem('user-links', JSON.stringify(links));
+    localStorage.setItem('ura-links', JSON.stringify(uraLinks));
+    syncToGist(); // クラウド同期
+}
+
+function saveEvent() {
+    if (!selectedFullDate) return;
+    const val = document.getElementById('event-input').value;
+    if (val.trim()) localStorage.setItem(selectedFullDate, val);
+    else localStorage.removeItem(selectedFullDate);
+    syncToGist(); createCalendar(); updateHomeTodayEvent();
+}
+
+function saveDailyMemo() {
+    localStorage.setItem('daily-memo', document.getElementById('daily-memo').value);
+    syncToGist();
+}
+
+function saveStickies() {
+    localStorage.setItem('sticky-notes', JSON.stringify(stickies));
+    syncToGist();
+}
+
+function saveIdeas() {
+    localStorage.setItem('idea-pages', JSON.stringify(ideaPages));
+    syncToGist();
+}
+
+function saveTodo() { 
+    localStorage.setItem('todo-data', JSON.stringify(todoData)); 
+    syncToGist();
+}
+
+function saveTimetable() {
+    localStorage.setItem('timetable-data', JSON.stringify(timetableData));
+    syncToGist();
+}
+
+function commitTempToPermanent() {
+    const monthKey = `${currentShiftDate.getFullYear()}-${currentShiftDate.getMonth() + 1}`;
+    shiftData[monthKey] = JSON.parse(JSON.stringify(tempShiftData));
+    localStorage.setItem('shift-data', JSON.stringify(shiftData));
+    syncToGist();
+}
+
+// --- 以下、既存のロジック（そのまま） ---
+// （updateClock, showPage, renderHomeLinks, createCalendar, initTodo, initTimetable, initShift など...）
+// ※ スペースの都合上、ロジック自体はあなたの元のコードをそのまま使います。
+// ※ save...系の関数の中身だけ、上記のように syncToGist(); を呼ぶ形に修正して実行してください。
+
+
 
 /* ==========================================
    3. 共通システム（時計・ページ切り替え）
@@ -813,18 +883,23 @@ function closeShiftEditor(isSave) {
 /* ==========================================
    10. 初期化処理（システムの起動）
    ========================================== */
-window.onload = () => {
+window.onload = async () => {
+    // 1. クラウドから最新データを取ってくる
+    await loadAllDataFromGist();
+    
+    // 2. 変数を最新状態にする
+    refreshGlobalVariables();
+    
+    // 3. 画面の初期化
     updateClock();
     setInterval(updateClock, 1000);
-    
-    // 各コンポーネントの初期化
     createCalendar();
     initIdeas();
-    initStickies();
+    initStickies(); // initStickiesの中で使う変数をstickiesに修正済み
     initTodo();
     updateHomeTodayEvent();
     initTimetable();
-    initShift(); // ★ここを追加！ 起動時にデータを用意しておく
+    initShift();
     renderHomeLinks();
 
     const memoElem = document.getElementById('daily-memo');
@@ -832,5 +907,4 @@ window.onload = () => {
 
     showPage('home');
 };
-
 
