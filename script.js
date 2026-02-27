@@ -110,7 +110,7 @@ function renderHomeLinks() {
     gateBtn.href = "javascript:void(0)";
     const isEven = currentList.length % 2 === 0;
     gateBtn.className = isEven ? "quick-link-btn span-2" : "quick-link-btn";
-    gateBtn.innerText = isUraView ? "↩ 表に戻る" : gateName;
+    gateBtn.innerText = isUraView ? "↩ リンクに戻る" : gateName;
     gateBtn.onclick = (e) => {
         e.preventDefault();
         isUraView = !isUraView;
