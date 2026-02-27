@@ -1,5 +1,5 @@
 // --- 設定：あなたの情報を入れる ---
-const GITHUB_TOKEN = 'ここにghp_から始まるメモを貼り付け';
+const GITHUB_TOKEN = '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 ';
 const GIST_ID = '094b64809122f383d20fcd235aeae11b';
 
 // --- Gistからデータを読み込む ---
