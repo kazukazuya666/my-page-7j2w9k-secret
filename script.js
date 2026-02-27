@@ -787,84 +787,59 @@ window.onload = () => {
 };
 
 
+
+
 /* ==========================================
-   11. データ移行機能（コピー＆読み込み）
+   11. データ一括移行機能（100%全データ強制同期版）
    ========================================== */
 
-
-// メニューの開閉（これはそのまま）
-function toggleDataMenu(event) {
-    event.stopPropagation();
-    const menu = document.getElementById('data-menu');
-    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-}
-
-document.addEventListener('click', () => {
-    const menu = document.getElementById('data-menu');
-    if (menu) menu.style.display = 'none';
-});
-
-
-// 1. すべてのデータを一括でコピーする
+// 1. 保存されているものを「名前を問わず全部」コピーする
 function exportData() {
-    // このアプリで使っている可能性のある全ての保存名をリストアップ
-    const keys = [
-        'shift-data',       // シフト
-        'quick-links',      // クイックリンク
-        'links',            // リンク（別名）
-        'todo-data',        // ToDo
-        'todos',            // ToDo（別名）
-        'reminders',        // ToDo（別名）
-        'notes-data',       // メモ
-        'notes',            // メモ（別名）
-        'timetable-data',   // 時間割
-        'timetable',        // 時間割（別名）
-        'sticky-notes',     // 付箋
-        'stickies',         // 付箋（別名）
-        'idea-notes',       // ネタ帳
-        'ideas',            // ネタ帳（別名）
-        'calendar-events',  // カレンダー
-        'events'            // カレンダー（別名）
-    ];
-
-    const allData = {};
+    const allStorageData = {};
     
-    // 存在するデータだけを allData に詰め込む
-    keys.forEach(key => {
-        const value = localStorage.getItem(key);
-        if (value) {
-            allData[key] = value; // 文字列のまま保存
-        }
-    });
+    // LocalStorageに入っているものを端から端まで全部取得
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        allStorageData[key] = localStorage.getItem(key);
+    }
 
-    const dataString = JSON.stringify(allData);
+    const dataString = JSON.stringify(allStorageData);
+
+    // 文字数を確認（データが入っていれば0ではないはず）
+    if (Object.keys(allStorageData).length === 0) {
+        alert("保存されているデータが一つも見つかりませんでした。");
+        return;
+    }
 
     navigator.clipboard.writeText(dataString).then(() => {
-        alert("【全データ】をコピーしました！\n（シフト、リンク、ToDo、時間割、メモ、付箋、ネタ帳、カレンダー）\n\n別の端末で『読み込む』を押して貼り付けてください。");
+        alert("【アプリ内の全データ】を完全にコピーしました！\n（" + Object.keys(allStorageData).length + "件のデータ）");
     }).catch(() => {
         prompt("コピーに失敗しました。以下の文字をすべてコピーしてください：", dataString);
     });
 }
 
-// 2. すべてのデータを一括で読み込む
+// 2. 受け取ったものを「そのまま全部」保存する
 function importData() {
     const jsonString = prompt("コピーしたデータをここに貼り付けてください：");
     if (!jsonString) return;
 
     try {
         const importedData = JSON.parse(jsonString);
-        if (confirm("全データを上書きしますか？現在の内容はすべて消えてしまいます。")) {
+        
+        if (confirm("全データを完全に同期しますか？\n（現在の内容はすべて上書きされます）")) {
             
-            // 全てのデータを一つずつLocalStorageに復元
+            // 一旦、今の保存を空にする（混ざらないようにするため）
+            localStorage.clear();
+
+            // 受け取ったデータをすべて一括保存
             Object.keys(importedData).forEach(key => {
                 localStorage.setItem(key, importedData[key]);
             });
 
-            alert("全データの同期が完了しました！アプリを再起動します。");
+            alert("全データの同期が完了しました！ページを再起動します。");
             location.reload();
         }
     } catch (e) {
-        alert("エラー：データの形式が正しくありません。");
-        console.error(e);
+        alert("エラー：データの読み込みに失敗しました。コピーした文字が欠けていないか確認してください。");
     }
 }
