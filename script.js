@@ -1,3 +1,50 @@
+// --- 設定：あなたの情報を入れる ---
+const GITHUB_TOKEN = 'ここにghp_から始まるメモを貼り付け';
+const GIST_ID = '094b64809122f383d20fcd235aeae11b';
+
+// --- Gistからデータを読み込む ---
+async function loadData() {
+    try {
+        const response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+        });
+        const gist = await response.json();
+        const content = gist.files['data.json'].content;
+        
+        // もしGistが空（{}）ならローカルから読み込む
+        if (content === '{}') {
+            return JSON.parse(localStorage.getItem('myDashboardData')) || {};
+        }
+        return JSON.parse(content);
+    } catch (e) {
+        console.error("読み込みエラー:", e);
+        return JSON.parse(localStorage.getItem('myDashboardData')) || {};
+    }
+}
+
+// --- Gistにデータを保存する ---
+async function saveData(data) {
+    // 1. まずブラウザに保存（バックアップ）
+    localStorage.setItem('myDashboardData', JSON.stringify(data));
+
+    // 2. Gistに保存（ネット同期）
+    try {
+        await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                files: { 'data.json': { content: JSON.stringify(data) } }
+            })
+        });
+        console.log("同期完了！");
+    } catch (e) {
+        console.error("同期失敗:", e);
+    }
+}
+
 /* ==========================================
    1. セキュリティ：初回アクセス認証
    ========================================== */
