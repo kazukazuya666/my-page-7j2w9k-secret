@@ -787,38 +787,50 @@ window.onload = () => {
 };
 
 
-
-
 /* ==========================================
-   11. データ一括移行機能（100%全データ強制同期版）
+   11. データ移行機能（コピー＆読み込み）
    ========================================== */
 
-// 1. 保存されているものを「名前を問わず全部」コピーする
-function exportData() {
-    const allStorageData = {};
-    
-    // LocalStorageに入っているものを端から端まで全部取得
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        allStorageData[key] = localStorage.getItem(key);
-    }
 
-    const dataString = JSON.stringify(allStorageData);
-
-    // 文字数を確認（データが入っていれば0ではないはず）
-    if (Object.keys(allStorageData).length === 0) {
-        alert("保存されているデータが一つも見つかりませんでした。");
-        return;
-    }
-
-    navigator.clipboard.writeText(dataString).then(() => {
-        alert("【アプリ内の全データ】を完全にコピーしました！\n（" + Object.keys(allStorageData).length + "件のデータ）");
-    }).catch(() => {
-        prompt("コピーに失敗しました。以下の文字をすべてコピーしてください：", dataString);
-    });
+// メニューの開閉（これはそのまま）
+function toggleDataMenu(event) {
+    event.stopPropagation();
+    const menu = document.getElementById('data-menu');
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
 }
 
-// 2. 受け取ったものを「そのまま全部」保存する
+document.addEventListener('click', () => {
+    const menu = document.getElementById('data-menu');
+    if (menu) menu.style.display = 'none';
+});
+
+
+
+
+// 1. 今保存されている「全ての種類」のデータを強制的にコピーする
+function exportData() {
+    try {
+        // LocalStorageにあるものを、名前を問わず全てオブジェクトに詰め込む
+        const allStorageData = {};
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            allStorageData[key] = localStorage.getItem(key);
+        }
+
+        const dataString = JSON.stringify(allStorageData);
+
+        // クリップボードにコピー
+        navigator.clipboard.writeText(dataString).then(() => {
+            alert("【完全バックアップ成功】\n全てのデータをコピーしました。\n（リンク、メモ、ネタ帳、カレンダー等すべて含まれています）");
+        }).catch(() => {
+            prompt("コピーに失敗しました。以下の文字をすべて選択してコピーしてください：", dataString);
+        });
+    } catch (e) {
+        alert("コピー中にエラーが発生しました。");
+    }
+}
+
+// 2. 受け取ったデータを、名前を問わず全て自分のスマホに書き込む
 function importData() {
     const jsonString = prompt("コピーしたデータをここに貼り付けてください：");
     if (!jsonString) return;
@@ -826,20 +838,19 @@ function importData() {
     try {
         const importedData = JSON.parse(jsonString);
         
-        if (confirm("全データを完全に同期しますか？\n（現在の内容はすべて上書きされます）")) {
+        if (confirm("全てのデータを上書きしますか？\n（リンクやメモ、カレンダーなど全てのデータが同期されます）")) {
             
-            // 一旦、今の保存を空にする（混ざらないようにするため）
-            localStorage.clear();
-
-            // 受け取ったデータをすべて一括保存
+            // 一旦今のデータを消して、新しいデータを一気に流し込む
+            // localStorage.clear(); // 慎重に行くならここはコメントアウトのままでOK
+            
             Object.keys(importedData).forEach(key => {
                 localStorage.setItem(key, importedData[key]);
             });
 
-            alert("全データの同期が完了しました！ページを再起動します。");
+            alert("全データの復元が完了しました！アプリを再起動します。");
             location.reload();
         }
     } catch (e) {
-        alert("エラー：データの読み込みに失敗しました。コピーした文字が欠けていないか確認してください。");
+        alert("エラー：データの形式が正しくありません。コピーし直してください。");
     }
 }
