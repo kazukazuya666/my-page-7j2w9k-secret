@@ -810,24 +810,38 @@ document.addEventListener('click', () => {
 // 1. 今保存されている「全ての種類」のデータを強制的にコピーする
 function exportData() {
     try {
-        // LocalStorageにあるものを、名前を問わず全てオブジェクトに詰め込む
-        const allStorageData = {};
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            allStorageData[key] = localStorage.getItem(key);
-        }
-
-        const dataString = JSON.stringify(allStorageData);
-
-        // クリップボードにコピー
-        navigator.clipboard.writeText(dataString).then(() => {
-            alert("【完全バックアップ成功】\n全てのデータをコピーしました。\n（リンク、メモ、ネタ帳、カレンダー等すべて含まれています）");
-        }).catch(() => {
-            prompt("コピーに失敗しました。以下の文字をすべて選択してコピーしてください：", dataString);
+        // 全データを取得
+        const allData = JSON.stringify(localStorage);
+        
+        // 1. まずはクリップボードへのコピーを試みる
+        navigator.clipboard.writeText(allData).then(() => {
+            alert("【成功】データをコピーしました！\n別の端末で貼り付けてください。");
+        }).catch(err => {
+            // 2. コピーに失敗（権限エラー等）した場合は、プロンプトで表示
+            console.error("Clipboard Error:", err);
+            const result = prompt("コピーに失敗しました。以下の文字をすべて選択してコピーしてください：", allData);
+            if (!result) {
+                // 3. プロンプトも消された場合の最終手段：画面に直接出す
+                showBackupText(allData);
+            }
         });
     } catch (e) {
-        alert("コピー中にエラーが発生しました。");
+        alert("書き出しエラー: " + e);
     }
+}
+
+// 最終手段：画面上にテキストエリアを作って表示する
+function showBackupText(text) {
+    const div = document.createElement('div');
+    div.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:100000; padding:20px; box-sizing:border-box; color:white;";
+    div.innerHTML = `
+        <h3 style="color:var(--accent);">データ救出モード</h3>
+        <p style="font-size:12px;">下の枠内の文字をすべて選んでコピーしてください。</p>
+        <textarea id="backup-ta" style="width:100%; height:70%; background:#222; color:#0f0; border:1px solid #444; font-family:monospace; font-size:10px;">${text}</textarea>
+        <button onclick="this.parentElement.remove()" style="width:100%; padding:15px; margin-top:10px; background:#444; color:white; border:none; border-radius:10px;">閉じる</button>
+    `;
+    document.body.appendChild(div);
+    document.getElementById('backup-ta').select();
 }
 
 // 2. 受け取ったデータを、名前を問わず全て自分のスマホに書き込む
