@@ -4,7 +4,25 @@
 const GITHUB_TOKEN = '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';
 const GIST_ID = '094b64809122f383d20fcd235aeae11b';
 
-// --- Gistからデータを読み込む（データ消去防止の修正済み） ---
+function syncToGist() {
+    const keys = ['user-links', 'ura-links', 'gate-name', 'idea-pages', 'sticky-notes', 'todo-data', 'timetable-data', 'shift-data', 'daily-memo'];
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.match(/^\d{4}-\d{1,2}-\d{1,2}$/)) keys.push(key);
+    }
+    const allData = {};
+    keys.forEach(key => {
+        const val = localStorage.getItem(key);
+        if (val) allData[key] = val;
+    });
+    // 非同期で実行してラグを防止
+    fetch(`https://api.github.com/gists/${GIST_ID}`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: { 'data.json': { content: JSON.stringify(allData) } } })
+    }).catch(e => console.error("同期失敗:", e));
+}
+
 async function loadAllDataFromGist() {
     try {
         const response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
@@ -12,64 +30,17 @@ async function loadAllDataFromGist() {
         });
         const gist = await response.json();
         const content = gist.files['data.json'].content;
-        
-        // 修正ポイント：文字列を一度オブジェクトとして解析
         const cloudData = JSON.parse(content);
-        
         if (Object.keys(cloudData).length > 0) {
-            for (let key in cloudData) {
-                // そのままlocalStorageに入れる（refreshGlobalVariablesでparseするため）
-                localStorage.setItem(key, cloudData[key]);
-            }
-            console.log("クラウドから同期完了");
+            for (let key in cloudData) { localStorage.setItem(key, cloudData[key]); }
             return true;
         }
-    } catch (e) {
-        console.error("読み込みエラー:", e);
-    }
+    } catch (e) { console.error("読み込みエラー:", e); }
     return false;
 }
 
-// --- Gistに全データを保存する ---
-async function syncToGist() {
-    const keys = [
-        'user-links', 'ura-links', 'gate-name', 'idea-pages', 
-        'sticky-notes', 'todo-data', 'timetable-data', 'shift-data', 'daily-memo'
-    ];
-    
-    // カレンダーの日付データを追加
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.match(/^\d{4}-\d{1,2}-\d{1,2}$/)) {
-            keys.push(key);
-        }
-    }
-
-    const allData = {};
-    keys.forEach(key => {
-        const val = localStorage.getItem(key);
-        if (val) allData[key] = val;
-    });
-
-    try {
-        await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-            method: 'PATCH',
-            headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                files: { 'data.json': { content: JSON.stringify(allData) } }
-            })
-        });
-        console.log("クラウドに保存しました");
-    } catch (e) {
-        console.error("同期失敗:", e);
-    }
-}
-
 /* ==========================================
-   1. セキュリティ（変更なし）
+   1. セキュリティ
    ========================================== */
 (function() {
     const SECRET_KEY = "harakazu5566";
@@ -84,7 +55,7 @@ async function syncToGist() {
 })();
 
 /* ==========================================
-   2. グローバル変数（初期化）
+   2. グローバル変数
    ========================================== */
 let links, uraLinks, gateName, ideaPages, stickies, todoData, timetableData, shiftData;
 let isUraView = false, isUraEditorMode = false, currentPageIndex = 0, currentTodoCategoryIndex = 0, currentTodoFilter = 'all';
@@ -92,19 +63,15 @@ let displayDate = new Date(), selectedFullDate = "", currentSemester, currentShi
 const semesters = ["1年 前期", "1年 後期", "2年 前期", "2年 後期", "3年 前期", "3年 後期", "4年 前期", "4年 後期"];
 
 function refreshGlobalVariables() {
-    try {
-        links = JSON.parse(localStorage.getItem('user-links')) || [{name: "Google", url: "https://google.com"}];
-        uraLinks = JSON.parse(localStorage.getItem('ura-links')) || [];
-        gateName = localStorage.getItem('gate-name') || "リンク設定";
-        ideaPages = JSON.parse(localStorage.getItem('idea-pages')) || [{title: "ページ1", content: ""}];
-        stickies = JSON.parse(localStorage.getItem('sticky-notes')) || [];
-        todoData = JSON.parse(localStorage.getItem('todo-data')) || [{category: "映画", items: []}];
-        currentSemester = localStorage.getItem('current-semester') || "1年 前期";
-        timetableData = JSON.parse(localStorage.getItem('timetable-data')) || {};
-        shiftData = JSON.parse(localStorage.getItem('shift-data')) || {};
-    } catch(e) {
-        console.error("パース失敗:", e);
-    }
+    links = JSON.parse(localStorage.getItem('user-links')) || [{name: "Google", url: "https://google.com"}];
+    uraLinks = JSON.parse(localStorage.getItem('ura-links')) || [];
+    gateName = localStorage.getItem('gate-name') || "リンク設定";
+    ideaPages = JSON.parse(localStorage.getItem('idea-pages')) || [{title: "ページ1", content: ""}];
+    stickies = JSON.parse(localStorage.getItem('sticky-notes')) || [];
+    todoData = JSON.parse(localStorage.getItem('todo-data')) || [{category: "映画", items: []}];
+    currentSemester = localStorage.getItem('current-semester') || "1年 前期";
+    timetableData = JSON.parse(localStorage.getItem('timetable-data')) || {};
+    shiftData = JSON.parse(localStorage.getItem('shift-data')) || {};
 }
 
 /* ==========================================
@@ -248,9 +215,10 @@ function updateHomeTodayEvent() {
 }
 
 /* ==========================================
-   6. ノート・付箋・ネタ帳
+   6. ノート・付箋・ネタ帳（削除機能追加）
    ========================================== */
 function saveDailyMemo() { localStorage.setItem('daily-memo', document.getElementById('daily-memo').value); syncToGist(); }
+
 function initStickies() {
     const c = document.getElementById('sticky-container'); if(!c) return;
     c.innerHTML = "";
@@ -265,17 +233,36 @@ function addStickyNote() {
     stickies.push({color: document.getElementById('note-color').value, content: ""});
     localStorage.setItem('sticky-notes', JSON.stringify(stickies)); syncToGist(); initStickies();
 }
+
 function initIdeas() {
-    const bar = document.getElementById('tab-bar'); if(!bar) return; bar.innerHTML = "";
+    const bar = document.getElementById('tab-bar'); if(!bar) return;
+    bar.innerHTML = "";
     ideaPages.forEach((p, i) => {
-        const b = document.createElement('button'); b.innerText = p.title;
-        b.style = `background-color:${(i===currentPageIndex)?"var(--accent)":"#444"}; color:white; border-radius:20px; padding:8px 16px; border:none; margin-right:8px; cursor:pointer;`;
+        const group = document.createElement('div');
+        group.style = `display:inline-flex; align-items:center; background:${(i===currentPageIndex)?"var(--accent)":"#444"}; color:white; border-radius:20px; margin-right:8px; padding:2px 12px; cursor:pointer;`;
+        
+        const b = document.createElement('span'); 
+        b.innerText = p.title; b.style = "font-size:0.85rem;";
         b.onclick = () => { currentPageIndex = i; initIdeas(); };
         b.ondblclick = () => { const n = prompt("名前:", p.title); if(n){ p.title=n; saveIdeas(); } };
-        bar.appendChild(b);
+        
+        const delBtn = document.createElement('span');
+        delBtn.innerText = " ×"; delBtn.style = "color:rgba(255,255,255,0.6); margin-left:8px; font-weight:bold;";
+        delBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (ideaPages.length > 1 && confirm(`「${p.title}」を削除しますか？`)) {
+                ideaPages.splice(i, 1);
+                if (currentPageIndex >= ideaPages.length) currentPageIndex = ideaPages.length - 1;
+                saveIdeas();
+            }
+        };
+
+        group.appendChild(b); group.appendChild(delBtn); bar.appendChild(group);
     });
-    if(document.getElementById('idea-note')) document.getElementById('idea-note').value = ideaPages[currentPageIndex].content;
+    const area = document.getElementById('idea-note');
+    if(area) area.value = ideaPages[currentPageIndex].content;
 }
+
 function saveCurrentIdea() { ideaPages[currentPageIndex].content = document.getElementById('idea-note').value; saveIdeas(); }
 function saveIdeas() { localStorage.setItem('idea-pages', JSON.stringify(ideaPages)); syncToGist(); initIdeas(); }
 function createNewPage() { const n = prompt("名前:",""); if(n){ ideaPages.push({title:n, content:""}); currentPageIndex=ideaPages.length-1; saveIdeas(); } }
@@ -461,26 +448,9 @@ function moveShiftDate(diff) {
    ========================================== */
 window.onload = async () => {
     updateClock(); setInterval(updateClock, 1000);
-    
-    // 1. クラウドからデータを読み込む
     await loadAllDataFromGist();
-    
-    // 2. 読み込んだデータを変数にセットする
     refreshGlobalVariables();
-    
-    // 3. 各画面を初期化する
-    renderHomeLinks(); 
-    createCalendar(); 
-    initIdeas(); 
-    initStickies(); 
-    initTodo(); 
-    initTimetable(); 
-    initShift(); 
-    updateHomeTodayEvent();
-    
-    if(document.getElementById('daily-memo')) {
-        document.getElementById('daily-memo').value = localStorage.getItem('daily-memo') || "";
-    }
-    
+    renderHomeLinks(); createCalendar(); initIdeas(); initStickies(); initTodo(); initTimetable(); initShift(); updateHomeTodayEvent();
+    if(document.getElementById('daily-memo')) document.getElementById('daily-memo').value = localStorage.getItem('daily-memo') || "";
     showPage('home');
 };
