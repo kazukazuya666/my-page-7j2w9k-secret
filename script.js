@@ -126,7 +126,7 @@ function renderEditorList() {
     if (!list) return;
 
     const currentList = isUraEditorMode ? uraLinks : links;
-    title.innerText = isUraEditorMode ? "🔒 裏編集" : "🔗 リンク編集";
+    title.innerText = isUraEditorMode ? "リンク編集" : "🔗 リンク編集";
     
     list.innerHTML = "";
     currentList.forEach((link, i) => {
