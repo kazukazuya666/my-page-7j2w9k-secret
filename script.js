@@ -352,32 +352,64 @@ function saveCurrentIdea() {
 function saveIdeas() { localStorage.setItem('idea-pages', JSON.stringify(ideaPages)); }
 
 /* ==========================================
-   7. ToDo機能
+   7. ToDo機能（完全版：編集・フィルタ・追加対応）
    ========================================== */
 function initTodo() {
     const bar = document.getElementById('todo-category-bar');
     if (!bar) return; 
     bar.innerHTML = "";
+    
+    // カテゴリータブの生成
     todoData.forEach((cat, i) => {
         const group = document.createElement('div');
-        group.style.display = "inline-flex"; group.style.alignItems = "center";
+        group.style.display = "inline-flex"; 
+        group.style.alignItems = "center";
         group.style.background = (i === currentTodoCategoryIndex) ? "var(--accent)" : "#444";
-        group.style.borderRadius = "20px"; group.style.marginRight = "8px"; group.style.padding = "2px 10px"; group.style.cursor = "pointer";
+        group.style.borderRadius = "20px"; 
+        group.style.marginRight = "8px"; 
+        group.style.padding = "2px 10px"; 
+        group.style.cursor = "pointer";
 
         const nameBtn = document.createElement('span');
-        nameBtn.innerText = cat.category; nameBtn.style.color = "white"; nameBtn.style.fontSize = "0.8rem";
-        nameBtn.onclick = () => { currentTodoCategoryIndex = i; initTodo(); };
+        nameBtn.innerText = cat.category; 
+        nameBtn.style.color = "white"; 
+        nameBtn.style.fontSize = "0.8rem";
+        
+        // カテゴリータップ時の動作
+        nameBtn.onclick = (e) => { 
+            e.preventDefault();
+            if (currentTodoCategoryIndex === i) {
+                // すでに選択されている場合は名前編集
+                const newName = prompt("カテゴリー名を変更:", cat.category);
+                if (newName && newName.trim() !== "") {
+                    cat.category = newName;
+                    saveTodo();
+                    initTodo();
+                }
+            } else {
+                // 選択されていない場合は切り替え
+                currentTodoCategoryIndex = i; 
+                initTodo(); 
+            }
+        };
 
         const delBtn = document.createElement('span');
-        delBtn.innerText = " ×"; delBtn.style.color = "rgba(255,255,255,0.6)";
+        delBtn.innerText = " ×"; 
+        delBtn.style.color = "rgba(255,255,255,0.6)";
+        delBtn.style.marginLeft = "5px";
         delBtn.onclick = (e) => {
             e.stopPropagation();
             if (todoData.length <= 1) return;
             if (confirm(`カテゴリー「${cat.category}」を削除しますか？`)) {
-                todoData.splice(i, 1); currentTodoCategoryIndex = 0; saveTodo(); initTodo();
+                todoData.splice(i, 1); 
+                currentTodoCategoryIndex = 0; 
+                saveTodo(); 
+                initTodo();
             }
         };
-        group.appendChild(nameBtn); group.appendChild(delBtn); bar.appendChild(group);
+        group.appendChild(nameBtn); 
+        group.appendChild(delBtn); 
+        bar.appendChild(group);
     });
     renderTodoList();
 }
@@ -387,57 +419,98 @@ function renderTodoList() {
     if (!container) return;
     container.innerHTML = "";
     const items = todoData[currentTodoCategoryIndex].items;
+
     items.forEach((item, index) => {
+        // フィルターによる絞り込み
         if (currentTodoFilter === 'active' && item.done) return;
         if (currentTodoFilter === 'completed' && !item.done) return;
+
         const div = document.createElement('div');
-        div.className = `todo-item ${item.done ? 'completed' : ''}`;
+        div.className = `todo-item`;
+        
+        // 「全部」タブの時だけ完了した項目に横線を引く
+        if (currentTodoFilter === 'all' && item.done) {
+            div.classList.add('completed');
+        }
+
         div.innerHTML = `
             <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleTodo(${index})">
-            <span>${item.text}</span>
+            <span class="todo-text" style="flex:1; margin-left:10px; font-size:0.9rem; cursor:pointer;">${item.text}</span>
             <button onclick="deleteTodo(${index})" style="background:none; border:none; color:#ff2e63; font-size:1.5rem; padding:0 10px;">×</button>
         `;
+
+        // 項目名の編集（文字部分をタップ）
+        const textSpan = div.querySelector('.todo-text');
+        textSpan.onclick = () => {
+            const newText = prompt("項目名を変更:", item.text);
+            if (newText && newText.trim() !== "") {
+                item.text = newText;
+                saveTodo();
+                renderTodoList();
+            }
+        };
+
         container.appendChild(div);
     });
 }
 
+// 項目追加
 function addTodoItem() {
     const input = document.getElementById('todo-input');
     if (!input || input.value.trim() === "") return;
     todoData[currentTodoCategoryIndex].items.push({text: input.value.trim(), done: false});
-    input.value = ""; saveTodo(); renderTodoList(); input.blur(); 
+    input.value = ""; 
+    saveTodo(); 
+    renderTodoList(); 
+    input.blur(); 
 }
 
+// 完了/未完了の切り替え
 function toggleTodo(index) {
     todoData[currentTodoCategoryIndex].items[index].done = !todoData[currentTodoCategoryIndex].items[index].done;
-    saveTodo(); renderTodoList();
-}
-
-function deleteTodo(index) {
-    if(confirm("削除しますか？")) {
-        todoData[currentTodoCategoryIndex].items.splice(index, 1);
-        saveTodo(); renderTodoList();
-    }
-}
-
-function setTodoFilter(filter) {
-    currentTodoFilter = filter;
-    document.getElementById('f-all').classList.toggle('active', filter === 'all');
-    document.getElementById('f-active').classList.toggle('active', filter === 'active');
-    document.getElementById('f-completed').classList.toggle('active', filter === 'completed');
+    saveTodo();
     renderTodoList();
 }
 
-function createTodoCategory() {
-    const n = prompt("新しいカテゴリー名", "");
-    if(n) {
-        todoData.push({category: n, items: []});
-        currentTodoCategoryIndex = todoData.length - 1;
-        saveTodo(); initTodo();
+// 項目削除
+function deleteTodo(index) {
+    if(confirm("この項目を削除しますか？")) {
+        todoData[currentTodoCategoryIndex].items.splice(index, 1);
+        saveTodo();
+        renderTodoList();
     }
 }
 
-function saveTodo() { localStorage.setItem('todo-data', JSON.stringify(todoData)); }
+// フィルター切り替え（全部・未達成・達成済）
+function setTodoFilter(filter) {
+    currentTodoFilter = filter;
+    // ボタンの見た目を更新
+    const fAll = document.getElementById('f-all');
+    const fActive = document.getElementById('f-active');
+    const fCompleted = document.getElementById('f-completed');
+    
+    if(fAll) fAll.classList.toggle('active', filter === 'all');
+    if(fActive) fActive.classList.toggle('active', filter === 'active');
+    if(fCompleted) fCompleted.classList.toggle('active', filter === 'completed');
+    
+    renderTodoList();
+}
+
+// 新しいカテゴリー作成
+function createTodoCategory() {
+    const n = prompt("新しいカテゴリー名", "");
+    if(n && n.trim() !== "") {
+        todoData.push({category: n.trim(), items: []});
+        currentTodoCategoryIndex = todoData.length - 1;
+        saveTodo();
+        initTodo();
+    }
+}
+
+// ストレージ保存
+function saveTodo() { 
+    localStorage.setItem('todo-data', JSON.stringify(todoData)); 
+}
 
 /* ==========================================
    8. 時間割機能
