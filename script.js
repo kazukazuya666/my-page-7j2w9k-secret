@@ -791,56 +791,59 @@ window.onload = () => {
    11. データ移行機能（コピー＆読み込み）
    ========================================== */
 
-// メニューの開閉
+
+// メニューの開閉（これはそのまま）
 function toggleDataMenu(event) {
-    event.stopPropagation(); // ボタンを押した時に背景のクリックイベントを防ぐ
+    event.stopPropagation();
     const menu = document.getElementById('data-menu');
     menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
 }
 
-// 画面のどこかをタップしたらメニューを閉じる
 document.addEventListener('click', () => {
     const menu = document.getElementById('data-menu');
     if (menu) menu.style.display = 'none';
 });
 
-// 1. データをコピーする機能
+// 1. すべてのデータを一括でコピーする機能
 function exportData() {
     const allData = {
         shift: JSON.parse(localStorage.getItem('shift-data')) || {},
-        links: JSON.parse(localStorage.getItem('quick-links')) || []
+        links: JSON.parse(localStorage.getItem('quick-links')) || [],
+        notes: JSON.parse(localStorage.getItem('notes-data')) || [], // メモ
+        todo: JSON.parse(localStorage.getItem('todo-data')) || [],   // ToDo
+        calendar: JSON.parse(localStorage.getItem('calendar-events')) || {} // カレンダー
     };
+    
     const dataString = JSON.stringify(allData);
 
     navigator.clipboard.writeText(dataString).then(() => {
-        alert("現在のデータをコピーしました！\n別の端末で『読み込む』を押して貼り付けてください。");
+        alert("【全データ】をコピーしました！\n別の端末で『読み込む』を押して貼り付けてください。");
     }).catch(() => {
-        // コピーに失敗した場合のバックアップ案
-        prompt("以下の文字をすべてコピーして保存してください：", dataString);
+        prompt("コピーに失敗しました。以下の文字をすべてコピーしてください：", dataString);
     });
 }
 
-// 2. データを読み込む機能
+// 2. すべてのデータを一括で読み込む機能
 function importData() {
     const jsonString = prompt("コピーしたデータをここに貼り付けてください：");
     if (!jsonString) return;
 
     try {
         const importedData = JSON.parse(jsonString);
-        if (confirm("データを上書きしますか？現在の内容は消えてしまいます。")) {
-            // シフトデータ
-            if (importedData.shift) {
-                localStorage.setItem('shift-data', JSON.stringify(importedData.shift));
-            }
-            // リンクデータ
-            if (importedData.links) {
-                localStorage.setItem('quick-links', JSON.stringify(importedData.links));
-            }
-            alert("読み込み完了！再起動します。");
+        if (confirm("全データを上書きしますか？現在の内容はすべて消えてしまいます。")) {
+            
+            // 各データをLocalStorageに保存
+            if (importedData.shift) localStorage.setItem('shift-data', JSON.stringify(importedData.shift));
+            if (importedData.links) localStorage.setItem('quick-links', JSON.stringify(importedData.links));
+            if (importedData.notes) localStorage.setItem('notes-data', JSON.stringify(importedData.notes));
+            if (importedData.todo) localStorage.setItem('todo-data', JSON.stringify(importedData.todo));
+            if (importedData.calendar) localStorage.setItem('calendar-events', JSON.stringify(importedData.calendar));
+
+            alert("全データの読み込みが完了しました！アプリを再起動します。");
             location.reload();
         }
     } catch (e) {
-        alert("エラー：正しいデータではありません。");
+        alert("エラー：データの形式が正しくありません。");
+        console.error(e);
     }
 }
-
