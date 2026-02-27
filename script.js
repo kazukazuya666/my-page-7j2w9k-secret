@@ -4,7 +4,6 @@
 const GITHUB_TOKEN = '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';
 const GIST_ID = '094b64809122f383d20fcd235aeae11b';
 
-// --- Gistからデータを読み込む ---
 async function loadAllDataFromGist() {
     try {
         const response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
@@ -12,82 +11,54 @@ async function loadAllDataFromGist() {
         });
         const gist = await response.json();
         const content = gist.files['data.json'].content;
-        
-        // 取得した文字列を一度オブジェクトに戻す
         const cloudData = JSON.parse(content);
-        
         if (Object.keys(cloudData).length > 0) {
             for (let key in cloudData) {
-                // cloudData[key] の中身はすでにJSON文字列なので、そのまま保存
                 localStorage.setItem(key, cloudData[key]);
             }
-            console.log("クラウドから同期完了");
             return true;
         }
-    } catch (e) {
-        console.error("読み込みエラー:", e);
-    }
+    } catch (e) { console.error("読み込みエラー:", e); }
     return false;
 }
 
-// --- Gistに全データを保存する ---
 async function syncToGist() {
-    // 同期対象のメインキー
-    const keys = [
-        'user-links', 'ura-links', 'gate-name', 'idea-pages', 
-        'sticky-notes', 'todo-data', 'timetable-data', 'shift-data', 'daily-memo'
-    ];
-    
-    // カレンダーの日付データを追加
+    const keys = ['user-links', 'ura-links', 'gate-name', 'idea-pages', 'sticky-notes', 'todo-data', 'timetable-data', 'shift-data', 'daily-memo'];
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.match(/^\d{4}-\d{1,2}-\d{1,2}$/)) {
-            keys.push(key);
-        }
+        if (key && key.match(/^\d{4}-\d{1,2}-\d{1,2}$/)) keys.push(key);
     }
-
     const allData = {};
     keys.forEach(key => {
         const val = localStorage.getItem(key);
-        if (val) allData[key] = val; // ここは文字列のまま格納
+        if (val) allData[key] = val;
     });
-
     try {
         await fetch(`https://api.github.com/gists/${GIST_ID}`, {
             method: 'PATCH',
-            headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                files: { 'data.json': { content: JSON.stringify(allData) } }
-            })
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ files: { 'data.json': { content: JSON.stringify(allData) } } })
         });
-        console.log("クラウドに保存しました");
-    } catch (e) {
-        console.error("同期失敗:", e);
-    }
+    } catch (e) { console.error("同期失敗:", e); }
 }
 
 /* ==========================================
-   1. セキュリティ：初回アクセス認証
+   1. セキュリティ（変更なし）
    ========================================== */
 (function() {
     const SECRET_KEY = "harakazu5566";
     const AUTH_ID = "my_dashboard_authenticated";
     if (localStorage.getItem(AUTH_ID) === "true") return;
-
     let pass = prompt("パスワードを入力してください。");
-    if (pass === SECRET_KEY) {
-        localStorage.setItem(AUTH_ID, "true");
-    } else {
+    if (pass === SECRET_KEY) localStorage.setItem(AUTH_ID, "true");
+    else {
         alert("パスワードが違います。");
         document.body.innerHTML = `<div style="background:#1a1a1a; color:white; height:100vh; display:flex; align-items:center; justify-content:center;"><h1>🔒 Access Denied</h1></div>`;
     }
 })();
 
 /* ==========================================
-   2. グローバル変数・データ管理
+   2. グローバル変数（初期化）
    ========================================== */
 let links, uraLinks, gateName, ideaPages, stickies, todoData, timetableData, shiftData;
 let isUraView = false, isUraEditorMode = false, currentPageIndex = 0, currentTodoCategoryIndex = 0, currentTodoFilter = 'all';
@@ -95,27 +66,15 @@ let displayDate = new Date(), selectedFullDate = "", currentSemester, currentShi
 const semesters = ["1年 前期", "1年 後期", "2年 前期", "2年 後期", "3年 前期", "3年 後期", "4年 前期", "4年 後期"];
 
 function refreshGlobalVariables() {
-    try {
-        links = JSON.parse(localStorage.getItem('user-links')) || [{name: "Google", url: "https://google.com"}];
-        uraLinks = JSON.parse(localStorage.getItem('ura-links')) || [];
-        gateName = localStorage.getItem('gate-name') || "リンク設定";
-        ideaPages = JSON.parse(localStorage.getItem('idea-pages')) || [{title: "ページ1", content: ""}];
-        stickies = JSON.parse(localStorage.getItem('sticky-notes')) || [];
-        todoData = JSON.parse(localStorage.getItem('todo-data')) || [{category: "カテゴリ", items: []}];
-        currentSemester = localStorage.getItem('current-semester') || "1年 前期";
-        timetableData = JSON.parse(localStorage.getItem('timetable-data')) || {};
-        shiftData = JSON.parse(localStorage.getItem('shift-data')) || {};
-    } catch (e) {
-        console.error("パースエラー。初期値を使用します:", e);
-        // エラー時は最低限の初期値をセット
-        links = [{name: "Google", url: "https://google.com"}];
-        uraLinks = [];
-        ideaPages = [{title: "ページ1", content: ""}];
-        stickies = [];
-        todoData = [{category: "カテゴリ", items: []}];
-        timetableData = {};
-        shiftData = {};
-    }
+    links = JSON.parse(localStorage.getItem('user-links')) || [{name: "Google", url: "https://google.com"}];
+    uraLinks = JSON.parse(localStorage.getItem('ura-links')) || [];
+    gateName = localStorage.getItem('gate-name') || "リンク設定";
+    ideaPages = JSON.parse(localStorage.getItem('idea-pages')) || [{title: "ページ1", content: ""}];
+    stickies = JSON.parse(localStorage.getItem('sticky-notes')) || [];
+    todoData = JSON.parse(localStorage.getItem('todo-data')) || [{category: "映画", items: []}];
+    currentSemester = localStorage.getItem('current-semester') || "1年 前期";
+    timetableData = JSON.parse(localStorage.getItem('timetable-data')) || {};
+    shiftData = JSON.parse(localStorage.getItem('shift-data')) || {};
 }
 
 /* ==========================================
@@ -124,10 +83,8 @@ function refreshGlobalVariables() {
 function updateClock() {
     const now = new Date();
     const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-    const dElem = document.getElementById('date');
-    const cElem = document.getElementById('clock');
-    if (dElem) dElem.innerText = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} (${days[now.getDay()]})`;
-    if (cElem) cElem.innerText = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+    if (document.getElementById('date')) document.getElementById('date').innerText = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} (${days[now.getDay()]})`;
+    if (document.getElementById('clock')) document.getElementById('clock').innerText = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
 }
 
 function showPage(pageId) {
@@ -142,7 +99,7 @@ function showPage(pageId) {
 }
 
 /* ==========================================
-   4. クイックリンク
+   4. クイックリンク（復元）
    ========================================== */
 function renderHomeLinks() {
     const grid = document.getElementById('link-grid-container');
@@ -158,7 +115,7 @@ function renderHomeLinks() {
     const gate = document.createElement('a');
     gate.href = "javascript:void(0)";
     gate.className = (list.length % 2 === 0) ? "quick-link-btn span-2" : "quick-link-btn";
-    gate.innerText = isUraView ? "↩ 戻る" : gateName;
+    gate.innerText = isUraView ? "↩ リンクに戻る" : gateName;
     gate.onclick = () => { isUraView = !isUraView; renderHomeLinks(); };
     grid.appendChild(gate);
 }
@@ -169,28 +126,43 @@ function renderEditorList() {
     const cur = isUraEditorMode ? uraLinks : links;
     list.innerHTML = "";
     cur.forEach((l, i) => {
-        const d = document.createElement('div');
-        d.className = "editor-item"; // スタイルはCSSに依存
-        d.style = "display:flex; align-items:center; background:#444; padding:10px; margin-bottom:5px; border-radius:10px; gap:10px;";
-        d.innerHTML = `
-            <div style="flex:1;"><b>${l.name}</b><br><small>${l.url}</small></div>
-            <button onclick="deleteLink(${i})">削除</button>`;
-        list.appendChild(d);
+        const item = document.createElement('div');
+        item.style = "display:flex; align-items:center; background:#444; padding:10px; border-radius:10px; margin-bottom:8px; gap:10px; border:1px solid #555;";
+        item.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:5px;">
+                <button onclick="moveLink(${i}, -1)" style="background:#666; color:white; border:none; border-radius:4px; padding:5px 8px; font-size:12px;">▲</button>
+                <button onclick="moveLink(${i}, 1)" style="background:#666; color:white; border:none; border-radius:4px; padding:5px 8px; font-size:12px;">▼</button>
+            </div>
+            <div onclick="editLinkContent(${i})" style="flex:1; cursor:pointer; min-width:0;">
+                <div style="font-weight:bold; color:white; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${l.name}</div>
+                <div style="font-size:0.7rem; color:#888; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${l.url}</div>
+            </div>
+            <button onclick="deleteLink(${i})" style="background:none; border:none; color:#ff2e63; font-size:1.8rem; padding:0 10px;">×</button>`;
+        list.appendChild(item);
     });
 }
-
-function saveLinks() {
-    localStorage.setItem('user-links', JSON.stringify(links));
-    localStorage.setItem('ura-links', JSON.stringify(uraLinks));
-    syncToGist();
+function moveLink(index, dir) {
+    const list = isUraEditorMode ? uraLinks : links;
+    const next = index + dir;
+    if (next < 0 || next >= list.length) return;
+    [list[index], list[next]] = [list[next], list[index]];
+    saveLinks(); renderEditorList(); renderHomeLinks();
 }
-function deleteLink(i) { (isUraEditorMode ? uraLinks : links).splice(i, 1); saveLinks(); renderEditorList(); renderHomeLinks(); }
+function editLinkContent(i) {
+    const list = isUraEditorMode ? uraLinks : links;
+    const n = prompt("名前:", list[i].name); if(n===null) return;
+    const u = prompt("URL:", list[i].url); if(u===null) return;
+    list[i] = {name:n, url:u};
+    saveLinks(); renderEditorList(); renderHomeLinks();
+}
+function deleteLink(i) { if(confirm("削除？")) { (isUraEditorMode?uraLinks:links).splice(i,1); saveLinks(); renderEditorList(); renderHomeLinks(); } }
 function addLink() {
     const n = document.getElementById('new-link-name'), u = document.getElementById('new-link-url');
     if(!n.value || !u.value) return;
-    (isUraEditorMode ? uraLinks : links).push({name:n.value, url:u.value});
+    (isUraEditorMode?uraLinks:links).push({name:n.value, url:u.value});
     saveLinks(); renderEditorList(); n.value=""; u.value="";
 }
+function saveLinks() { localStorage.setItem('user-links', JSON.stringify(links)); localStorage.setItem('ura-links', JSON.stringify(uraLinks)); syncToGist(); }
 function openLinkEditor() { isUraEditorMode = isUraView; document.getElementById('link-editor-modal').style.display='block'; renderEditorList(); }
 function closeLinkEditor() { document.getElementById('link-editor-modal').style.display='none'; renderHomeLinks(); }
 
@@ -199,11 +171,11 @@ function closeLinkEditor() { document.getElementById('link-editor-modal').style.
    ========================================== */
 function createCalendar() {
     const y = displayDate.getFullYear(), m = displayDate.getMonth();
-    const display = document.getElementById('calendar-month'); if(display) display.innerText = `${y}年 ${m + 1}月`;
+    const disp = document.getElementById('calendar-month'); if(disp) disp.innerText = `${y}年 ${m + 1}月`;
     const fDay = new Date(y, m, 1).getDay(), lDate = new Date(y, m+1, 0).getDate();
     const tbody = document.getElementById('calendar-body'); if(!tbody) return;
     tbody.innerHTML = "";
-    const todayStr = `${new Date().getFullYear()}-${new Date().getMonth()+1}-${new Date().getDate()}`;
+    const today = new Date(); const todayStr = `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`;
     if (!selectedFullDate) selectedFullDate = todayStr;
     let date = 1;
     for (let i = 0; i < 6; i++) {
@@ -230,26 +202,23 @@ function createCalendar() {
     refreshEventInput();
 }
 function refreshEventInput() {
-    const input = document.getElementById('event-input');
-    if (input) input.value = localStorage.getItem(selectedFullDate) || "";
-    const label = document.getElementById('selected-date-label');
-    if (label) label.innerText = selectedFullDate + " の予定";
+    const input = document.getElementById('event-input'); if(input) input.value = localStorage.getItem(selectedFullDate) || "";
+    const label = document.getElementById('selected-date-label'); if(label) label.innerText = selectedFullDate + " の予定";
 }
 function saveEvent() {
     const v = document.getElementById('event-input').value;
-    if (v.trim()) localStorage.setItem(selectedFullDate, v);
-    else localStorage.removeItem(selectedFullDate);
+    if(v.trim()) localStorage.setItem(selectedFullDate, v); else localStorage.removeItem(selectedFullDate);
     createCalendar(); updateHomeTodayEvent(); syncToGist();
 }
 function changeMonth(d) { displayDate.setMonth(displayDate.getMonth() + d); createCalendar(); }
 function updateHomeTodayEvent() {
     const full = `${new Date().getFullYear()}-${new Date().getMonth()+1}-${new Date().getDate()}`;
     const txt = localStorage.getItem(full) || "本日の予定はありません";
-    const el = document.getElementById('today-event-text'); if(el) el.innerText = txt;
+    if(document.getElementById('today-event-text')) document.getElementById('today-event-text').innerText = txt;
 }
 
 /* ==========================================
-   6. ノート・付箋
+   6. ノート・付箋・ネタ帳
    ========================================== */
 function saveDailyMemo() { localStorage.setItem('daily-memo', document.getElementById('daily-memo').value); syncToGist(); }
 function initStickies() {
@@ -266,49 +235,70 @@ function addStickyNote() {
     stickies.push({color: document.getElementById('note-color').value, content: ""});
     localStorage.setItem('sticky-notes', JSON.stringify(stickies)); syncToGist(); initStickies();
 }
-
 function initIdeas() {
-    const bar = document.getElementById('tab-bar'); if(!bar) return;
-    bar.innerHTML = "";
+    const bar = document.getElementById('tab-bar'); if(!bar) return; bar.innerHTML = "";
     ideaPages.forEach((p, i) => {
         const b = document.createElement('button'); b.innerText = p.title;
-        b.style.backgroundColor = (i === currentPageIndex) ? "var(--accent)" : "#444";
+        b.style = `background-color:${(i===currentPageIndex)?"var(--accent)":"#444"}; color:white; border-radius:20px; padding:8px 16px; border:none; margin-right:8px; cursor:pointer;`;
         b.onclick = () => { currentPageIndex = i; initIdeas(); };
         b.ondblclick = () => { const n = prompt("名前:", p.title); if(n){ p.title=n; saveIdeas(); } };
         bar.appendChild(b);
     });
-    const area = document.getElementById('idea-note'); if(area) area.value = ideaPages[currentPageIndex].content;
+    if(document.getElementById('idea-note')) document.getElementById('idea-note').value = ideaPages[currentPageIndex].content;
 }
 function saveCurrentIdea() { ideaPages[currentPageIndex].content = document.getElementById('idea-note').value; saveIdeas(); }
 function saveIdeas() { localStorage.setItem('idea-pages', JSON.stringify(ideaPages)); syncToGist(); initIdeas(); }
-function createNewPage() { const n = prompt("ページ名:",""); if(n){ ideaPages.push({title:n, content:""}); currentPageIndex=ideaPages.length-1; saveIdeas(); } }
+function createNewPage() { const n = prompt("名前:",""); if(n){ ideaPages.push({title:n, content:""}); currentPageIndex=ideaPages.length-1; saveIdeas(); } }
 
 /* ==========================================
-   7. ToDo
+   7. ToDo（枠崩れを完全復元）
    ========================================== */
 function initTodo() {
-    const bar = document.getElementById('todo-category-bar'); if(!bar) return;
+    const bar = document.getElementById('todo-category-bar'); if (!bar) return;
     bar.innerHTML = "";
     todoData.forEach((cat, i) => {
-        const div = document.createElement('div'); div.className = "todo-cat-group";
-        div.style.background = (i === currentTodoCategoryIndex) ? "var(--accent)" : "#444";
-        div.innerHTML = `<span onclick="currentTodoCategoryIndex=${i}; initTodo();">${cat.category}</span>
-                         <span onclick="todoData.splice(${i},1); currentTodoCategoryIndex=0; saveTodo(); initTodo();"> ×</span>`;
-        bar.appendChild(div);
+        const group = document.createElement('div');
+        group.style = `display:inline-flex; align-items:center; background:${(i===currentTodoCategoryIndex)?"var(--accent)":"#444"}; border-radius:20px; margin-right:8px; padding:2px 10px; cursor:pointer;`;
+        
+        const nameBtn = document.createElement('span');
+        nameBtn.innerText = cat.category; nameBtn.style = "color:white; font-size:0.8rem;";
+        nameBtn.onclick = () => {
+            if (currentTodoCategoryIndex === i) {
+                const n = prompt("カテゴリー名変更:", cat.category);
+                if (n) { cat.category = n; saveTodo(); initTodo(); }
+            } else { currentTodoCategoryIndex = i; initTodo(); }
+        };
+
+        const delBtn = document.createElement('span');
+        delBtn.innerText = " ×"; delBtn.style = "color:rgba(255,255,255,0.6); margin-left:5px;";
+        delBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (todoData.length > 1 && confirm("削除？")) { todoData.splice(i, 1); currentTodoCategoryIndex = 0; saveTodo(); initTodo(); }
+        };
+        group.appendChild(nameBtn); group.appendChild(delBtn); bar.appendChild(group);
     });
     renderTodoList();
 }
+
 function renderTodoList() {
-    const con = document.getElementById('todo-list-container'); if(!con) return;
-    con.innerHTML = "";
+    const container = document.getElementById('todo-list-container'); if (!container) return;
+    container.innerHTML = "";
     todoData[currentTodoCategoryIndex].items.forEach((item, i) => {
-        if(currentTodoFilter==='active' && item.done) return;
-        if(currentTodoFilter==='completed' && !item.done) return;
-        const d = document.createElement('div'); d.className = `todo-item ${item.done?'completed':''}`;
-        d.innerHTML = `<input type="checkbox" ${item.done?'checked':''} onchange="todoData[currentTodoCategoryIndex].items[${i}].done=!todoData[currentTodoCategoryIndex].items[${i}].done; saveTodo(); renderTodoList();">
-                       <span style="flex:1; margin-left:10px;">${item.text}</span>
-                       <button onclick="todoData[currentTodoCategoryIndex].items.splice(${i},1); saveTodo(); renderTodoList();">×</button>`;
-        con.appendChild(d);
+        if (currentTodoFilter === 'active' && item.done) return;
+        if (currentTodoFilter === 'completed' && !item.done) return;
+        
+        const div = document.createElement('div');
+        div.className = `todo-item ${item.done ? 'completed' : ''}`;
+        div.innerHTML = `
+            <input type="checkbox" ${item.done ? 'checked' : ''} onchange="todoData[currentTodoCategoryIndex].items[${i}].done=!todoData[currentTodoCategoryIndex].items[${i}].done; saveTodo(); renderTodoList();">
+            <span class="todo-text" style="flex:1; margin-left:10px; font-size:0.9rem; cursor:pointer;">${item.text}</span>
+            <button onclick="todoData[currentTodoCategoryIndex].items.splice(${i},1); saveTodo(); renderTodoList();" style="background:none; border:none; color:#ff2e63; font-size:1.5rem; padding:0 10px;">×</button>`;
+        
+        div.querySelector('.todo-text').onclick = () => {
+            const n = prompt("項目変更:", item.text);
+            if (n) { item.text = n; saveTodo(); renderTodoList(); }
+        };
+        container.appendChild(div);
     });
 }
 function addTodoItem() {
@@ -318,34 +308,35 @@ function addTodoItem() {
     input.value=""; saveTodo(); renderTodoList();
 }
 function saveTodo() { localStorage.setItem('todo-data', JSON.stringify(todoData)); syncToGist(); }
-function setTodoFilter(f) { currentTodoFilter = f; renderTodoList(); }
+function setTodoFilter(f) { 
+    currentTodoFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    if(document.getElementById('f-'+f)) document.getElementById('f-'+f).classList.add('active');
+    renderTodoList(); 
+}
 function createTodoCategory() { const n = prompt("名前:",""); if(n){ todoData.push({category:n, items:[]}); currentTodoCategoryIndex=todoData.length-1; saveTodo(); initTodo(); } }
 
 /* ==========================================
    8. 時間割
    ========================================== */
 function initTimetable() {
-    const tabs = document.getElementById('semester-tabs');
-    const body = document.getElementById('timetable-body');
-    if(!tabs || !body) return;
-    tabs.innerHTML = "";
+    const tabs = document.getElementById('semester-tabs'); const body = document.getElementById('timetable-body');
+    if(!tabs || !body) return; tabs.innerHTML = "";
     semesters.forEach(s => {
-        const b = document.createElement('button'); b.innerText = s;
-        b.className = (currentSemester === s) ? "sem-btn active" : "sem-btn";
+        const b = document.createElement('button'); b.innerText = s; b.className = (currentSemester === s) ? "sem-btn active" : "sem-btn";
         b.onclick = () => { currentSemester = s; localStorage.setItem('current-semester', s); initTimetable(); };
         tabs.appendChild(b);
     });
-    body.innerHTML = "";
-    const days = ["月","火","水","木","金"];
+    body.innerHTML = ""; const days = ["月","火","水","木","金"];
     for(let p=1; p<=5; p++) {
         const row = document.createElement('tr'); row.innerHTML = `<td>${p}</td>`;
         days.forEach(d => {
             const key = `${d}-${p}`;
-            const data = (timetableData[currentSemester] && timetableData[currentSemester][key]) ? timetableData[currentSemester][key] : {subject:"", place:""};
+            const dt = (timetableData[currentSemester] && timetableData[currentSemester][key]) ? timetableData[currentSemester][key] : {subject:"", place:""};
             const td = document.createElement('td');
-            td.innerHTML = `<b>${data.subject}</b><br><small>${data.place}</small>`;
+            td.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center;"><span class="tt-subject">${dt.subject}</span><span class="tt-place">${dt.place}</span></div>`;
             td.onclick = () => {
-                const s = prompt("科目:", data.subject), pl = prompt("場所:", data.place);
+                const s = prompt("科目:", dt.subject), pl = prompt("場所:", dt.place);
                 if(s!==null && pl!==null) {
                     if(!timetableData[currentSemester]) timetableData[currentSemester]={};
                     timetableData[currentSemester][key]={subject:s, place:pl};
@@ -359,64 +350,90 @@ function initTimetable() {
 }
 
 /* ==========================================
-   9. シフト（簡易版ロジック）
+   9. シフト（ドラムロール復元・色修正）
    ========================================== */
+let tempShiftData = {}, editingDate = 1, isWorkingTemp = false;
+function initDrums() {
+    const drums = [{id:'drum-s-hour',m:24},{id:'drum-s-min',m:60},{id:'drum-e-hour',m:24},{id:'drum-e-min',m:60}];
+    drums.forEach(d => {
+        const el = document.getElementById(d.id); if (!el || el.children.length > 0) return;
+        el.innerHTML = '<div style="height:40px;"></div>';
+        for(let i=0; i<d.m; i++) el.innerHTML += `<div class="drum-unit">${i.toString().padStart(2,'0')}</div>`;
+        el.innerHTML += '<div style="height:40px;"></div>';
+        el.onscroll = () => {
+            const idx = Math.round(el.scrollTop / 40);
+            el.querySelectorAll('.drum-unit').forEach((u, i) => u.classList.toggle('active', i === idx));
+        };
+    });
+}
+function getDrumValue(id) { return Math.round(document.getElementById(id).scrollTop / 40).toString().padStart(2, '0'); }
+function setDrumValue(id, v) { document.getElementById(id).scrollTo({ top: parseInt(v)*40 }); }
+function changeShiftMonth(diff) { currentShiftDate.setMonth(currentShiftDate.getMonth() + diff); initShift(); }
+
 function initShift() {
-    const y = currentShiftDate.getFullYear(), m = currentShiftDate.getMonth()+1;
-    const title = document.getElementById('shift-month-title'); if(title) title.innerText = `${y}年 ${m}月`;
-    const con = document.getElementById('shift-list-container'); if(!con) return;
-    con.innerHTML = "";
+    const y = currentShiftDate.getFullYear(), m = currentShiftDate.getMonth() + 1;
+    document.getElementById('shift-month-title').innerText = `${y}年 ${m}月`;
+    const container = document.getElementById('shift-list-container'); if(!container) return;
+    container.innerHTML = "";
     const mData = shiftData[`${y}-${m}`] || {};
-    const lastDay = new Date(y, m, 0).getDate();
-    for(let d=1; d<=lastDay; d++) {
-        const dayIdx = new Date(y, m-1, d).getDay();
+    const daysInM = new Date(y, m, 0).getDate();
+    for (let d = 1; d <= daysInM; d++) {
+        const date = new Date(y, m-1, d); const dayIdx = date.getDay();
         const row = document.createElement('div'); row.className = "shift-row";
         const val = mData[d];
-        row.innerHTML = `<div class="date-col">${d} (${["日","月","火","水","木","金","土"][dayIdx]})</div>
-                         <div class="time-col">${val ? (val.work ? val.s+"-"+val.e : "休み") : ""}</div>
-                         <button onclick="editShiftDay(${d})">編集</button>`;
-        con.appendChild(row);
+        let timeStr = "", timeStyle = "";
+        if (val) {
+            if (val.work) { timeStr = `${val.s} - ${val.e}`; timeStyle = "color: var(--accent);"; }
+            else { timeStr = "休み"; timeStyle = "color: #ff4444; font-weight: bold; opacity: 0.8;"; }
+        }
+        row.innerHTML = `<div class="date-col">${d}</div><div class="day-col ${dayIdx===0?'day-sun':dayIdx===6?'day-sat':''}">(${["日","月","火","水","木","金","土"][dayIdx]})</div>
+            <div class="time-col" style="${timeStyle}">${timeStr}</div>
+            <div class="edit-col"><button class="mini-edit-btn" onclick="openShiftEditor(${d})">編集</button></div>`;
+        container.appendChild(row);
     }
 }
-function editShiftDay(d) {
-    const y = currentShiftDate.getFullYear(), m = currentShiftDate.getMonth()+1;
-    const s = prompt("開始 (HH:mm) ※休みは空白", "09:00");
-    if (s === "") {
-        if(!shiftData[`${y}-${m}`]) shiftData[`${y}-${m}`]={};
-        shiftData[`${y}-${m}`][d] = {work:false};
-    } else if (s) {
-        const e = prompt("終了 (HH:mm)", "18:00");
-        if(!shiftData[`${y}-${m}`]) shiftData[`${y}-${m}`]={};
-        shiftData[`${y}-${m}`][d] = {work:true, s:s, e:e};
-    }
-    localStorage.setItem('shift-data', JSON.stringify(shiftData)); syncToGist(); initShift();
+function openShiftEditor(day) {
+    editingDate = day; initDrums();
+    const y = currentShiftDate.getFullYear(), m = currentShiftDate.getMonth() + 1;
+    tempShiftData = JSON.parse(JSON.stringify(shiftData[`${y}-${m}`] || {}));
+    updateEditorUI(); document.getElementById('shift-editor-modal').style.display = 'block';
 }
-function changeShiftMonth(diff) { currentShiftDate.setMonth(currentShiftDate.getMonth()+diff); initShift(); }
+function updateEditorUI() {
+    const y = currentShiftDate.getFullYear(), m = currentShiftDate.getMonth() + 1;
+    const dateObj = new Date(y, m - 1, editingDate);
+    document.getElementById('edit-date-display').innerText = `${m}月 ${editingDate}日 (${["日","月","火","水","木","金","土"][dateObj.getDay()]})`;
+    const data = tempShiftData[editingDate] || { work: true, s: "09:00", e: "18:00" };
+    isWorkingTemp = data.work;
+    document.getElementById('btn-work-on').style.background = isWorkingTemp ? "var(--accent)" : "#444";
+    document.getElementById('btn-work-off').style.background = !isWorkingTemp ? "#ff4444" : "#444";
+    document.getElementById('shift-time-ui').style.opacity = isWorkingTemp ? "1" : "0.2";
+    document.getElementById('shift-time-ui').style.pointerEvents = isWorkingTemp ? "auto" : "none";
+    const [sh, sm] = data.s.split(':'), [eh, em] = data.e.split(':');
+    setTimeout(() => { setDrumValue('drum-s-hour',sh); setDrumValue('drum-s-min',sm); setDrumValue('drum-e-hour',eh); setDrumValue('drum-e-min',em); }, 50);
+}
+function closeShiftEditor(save) {
+    if (save) {
+        tempShiftData[editingDate] = { work: isWorkingTemp, s: `${getDrumValue('drum-s-hour')}:${getDrumValue('drum-s-min')}`, e: `${getDrumValue('drum-e-hour')}:${getDrumValue('drum-e-min')}` };
+        shiftData[`${currentShiftDate.getFullYear()}-${currentShiftDate.getMonth()+1}`] = tempShiftData;
+        localStorage.setItem('shift-data', JSON.stringify(shiftData)); syncToGist();
+    }
+    document.getElementById('shift-editor-modal').style.display = 'none'; initShift();
+}
+function moveShiftDate(diff) {
+    tempShiftData[editingDate] = { work: isWorkingTemp, s: `${getDrumValue('drum-s-hour')}:${getDrumValue('drum-s-min')}`, e: `${getDrumValue('drum-e-hour')}:${getDrumValue('drum-e-min')}` };
+    const lastDay = new Date(currentShiftDate.getFullYear(), currentShiftDate.getMonth() + 1, 0).getDate();
+    let next = editingDate + diff; if (next < 1 || next > lastDay) return;
+    editingDate = next; updateEditorUI();
+}
 
 /* ==========================================
    10. 起動
    ========================================== */
 window.onload = async () => {
     updateClock(); setInterval(updateClock, 1000);
-    
-    // 1. クラウドからロード
     await loadAllDataFromGist();
-    
-    // 2. 変数へ展開
     refreshGlobalVariables();
-    
-    // 3. UI構築
-    renderHomeLinks();
-    createCalendar();
-    initIdeas();
-    initStickies();
-    initTodo();
-    initTimetable();
-    initShift();
-    updateHomeTodayEvent();
-    
-    const memo = document.getElementById('daily-memo');
-    if(memo) memo.value = localStorage.getItem('daily-memo') || "";
-
+    renderHomeLinks(); createCalendar(); initIdeas(); initStickies(); initTodo(); initTimetable(); initShift(); updateHomeTodayEvent();
+    if(document.getElementById('daily-memo')) document.getElementById('daily-memo').value = localStorage.getItem('daily-memo') || "";
     showPage('home');
 };
