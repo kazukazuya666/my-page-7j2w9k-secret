@@ -785,3 +785,62 @@ window.onload = () => {
 
     showPage('home');
 };
+
+
+/* ==========================================
+   11. データ移行機能（コピー＆読み込み）
+   ========================================== */
+
+// メニューの開閉
+function toggleDataMenu(event) {
+    event.stopPropagation(); // ボタンを押した時に背景のクリックイベントを防ぐ
+    const menu = document.getElementById('data-menu');
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+// 画面のどこかをタップしたらメニューを閉じる
+document.addEventListener('click', () => {
+    const menu = document.getElementById('data-menu');
+    if (menu) menu.style.display = 'none';
+});
+
+// 1. データをコピーする機能
+function exportData() {
+    const allData = {
+        shift: JSON.parse(localStorage.getItem('shift-data')) || {},
+        links: JSON.parse(localStorage.getItem('quick-links')) || []
+    };
+    const dataString = JSON.stringify(allData);
+
+    navigator.clipboard.writeText(dataString).then(() => {
+        alert("現在のデータをコピーしました！\n別の端末で『読み込む』を押して貼り付けてください。");
+    }).catch(() => {
+        // コピーに失敗した場合のバックアップ案
+        prompt("以下の文字をすべてコピーして保存してください：", dataString);
+    });
+}
+
+// 2. データを読み込む機能
+function importData() {
+    const jsonString = prompt("コピーしたデータをここに貼り付けてください：");
+    if (!jsonString) return;
+
+    try {
+        const importedData = JSON.parse(jsonString);
+        if (confirm("データを上書きしますか？現在の内容は消えてしまいます。")) {
+            // シフトデータ
+            if (importedData.shift) {
+                localStorage.setItem('shift-data', JSON.stringify(importedData.shift));
+            }
+            // リンクデータ
+            if (importedData.links) {
+                localStorage.setItem('quick-links', JSON.stringify(importedData.links));
+            }
+            alert("読み込み完了！再起動します。");
+            location.reload();
+        }
+    } catch (e) {
+        alert("エラー：正しいデータではありません。");
+    }
+}
+

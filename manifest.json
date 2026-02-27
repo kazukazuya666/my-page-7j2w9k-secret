@@ -1,6 +1,6 @@
 {
   "name": "MyShiftManager",
-  "short_name": "シフト管理",
+  "short_name": "マイページ",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#1a1a1a",
