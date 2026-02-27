@@ -4,6 +4,7 @@
 const GITHUB_TOKEN = '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';
 const GIST_ID = '094b64809122f383d20fcd235aeae11b';
 
+// --- Gistからデータを読み込む（データ消去防止の修正済み） ---
 async function loadAllDataFromGist() {
     try {
         const response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
@@ -11,35 +12,60 @@ async function loadAllDataFromGist() {
         });
         const gist = await response.json();
         const content = gist.files['data.json'].content;
+        
+        // 修正ポイント：文字列を一度オブジェクトとして解析
         const cloudData = JSON.parse(content);
+        
         if (Object.keys(cloudData).length > 0) {
             for (let key in cloudData) {
+                // そのままlocalStorageに入れる（refreshGlobalVariablesでparseするため）
                 localStorage.setItem(key, cloudData[key]);
             }
+            console.log("クラウドから同期完了");
             return true;
         }
-    } catch (e) { console.error("読み込みエラー:", e); }
+    } catch (e) {
+        console.error("読み込みエラー:", e);
+    }
     return false;
 }
 
+// --- Gistに全データを保存する ---
 async function syncToGist() {
-    const keys = ['user-links', 'ura-links', 'gate-name', 'idea-pages', 'sticky-notes', 'todo-data', 'timetable-data', 'shift-data', 'daily-memo'];
+    const keys = [
+        'user-links', 'ura-links', 'gate-name', 'idea-pages', 
+        'sticky-notes', 'todo-data', 'timetable-data', 'shift-data', 'daily-memo'
+    ];
+    
+    // カレンダーの日付データを追加
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.match(/^\d{4}-\d{1,2}-\d{1,2}$/)) keys.push(key);
+        if (key && key.match(/^\d{4}-\d{1,2}-\d{1,2}$/)) {
+            keys.push(key);
+        }
     }
+
     const allData = {};
     keys.forEach(key => {
         const val = localStorage.getItem(key);
         if (val) allData[key] = val;
     });
+
     try {
         await fetch(`https://api.github.com/gists/${GIST_ID}`, {
             method: 'PATCH',
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ files: { 'data.json': { content: JSON.stringify(allData) } } })
+            headers: {
+                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                files: { 'data.json': { content: JSON.stringify(allData) } }
+            })
         });
-    } catch (e) { console.error("同期失敗:", e); }
+        console.log("クラウドに保存しました");
+    } catch (e) {
+        console.error("同期失敗:", e);
+    }
 }
 
 /* ==========================================
@@ -66,15 +92,19 @@ let displayDate = new Date(), selectedFullDate = "", currentSemester, currentShi
 const semesters = ["1年 前期", "1年 後期", "2年 前期", "2年 後期", "3年 前期", "3年 後期", "4年 前期", "4年 後期"];
 
 function refreshGlobalVariables() {
-    links = JSON.parse(localStorage.getItem('user-links')) || [{name: "Google", url: "https://google.com"}];
-    uraLinks = JSON.parse(localStorage.getItem('ura-links')) || [];
-    gateName = localStorage.getItem('gate-name') || "リンク設定";
-    ideaPages = JSON.parse(localStorage.getItem('idea-pages')) || [{title: "ページ1", content: ""}];
-    stickies = JSON.parse(localStorage.getItem('sticky-notes')) || [];
-    todoData = JSON.parse(localStorage.getItem('todo-data')) || [{category: "映画", items: []}];
-    currentSemester = localStorage.getItem('current-semester') || "1年 前期";
-    timetableData = JSON.parse(localStorage.getItem('timetable-data')) || {};
-    shiftData = JSON.parse(localStorage.getItem('shift-data')) || {};
+    try {
+        links = JSON.parse(localStorage.getItem('user-links')) || [{name: "Google", url: "https://google.com"}];
+        uraLinks = JSON.parse(localStorage.getItem('ura-links')) || [];
+        gateName = localStorage.getItem('gate-name') || "リンク設定";
+        ideaPages = JSON.parse(localStorage.getItem('idea-pages')) || [{title: "ページ1", content: ""}];
+        stickies = JSON.parse(localStorage.getItem('sticky-notes')) || [];
+        todoData = JSON.parse(localStorage.getItem('todo-data')) || [{category: "映画", items: []}];
+        currentSemester = localStorage.getItem('current-semester') || "1年 前期";
+        timetableData = JSON.parse(localStorage.getItem('timetable-data')) || {};
+        shiftData = JSON.parse(localStorage.getItem('shift-data')) || {};
+    } catch(e) {
+        console.error("パース失敗:", e);
+    }
 }
 
 /* ==========================================
@@ -99,7 +129,7 @@ function showPage(pageId) {
 }
 
 /* ==========================================
-   4. クイックリンク（復元）
+   4. クイックリンク
    ========================================== */
 function renderHomeLinks() {
     const grid = document.getElementById('link-grid-container');
@@ -251,7 +281,7 @@ function saveIdeas() { localStorage.setItem('idea-pages', JSON.stringify(ideaPag
 function createNewPage() { const n = prompt("名前:",""); if(n){ ideaPages.push({title:n, content:""}); currentPageIndex=ideaPages.length-1; saveIdeas(); } }
 
 /* ==========================================
-   7. ToDo（枠崩れを完全復元）
+   7. ToDo
    ========================================== */
 function initTodo() {
     const bar = document.getElementById('todo-category-bar'); if (!bar) return;
@@ -350,7 +380,7 @@ function initTimetable() {
 }
 
 /* ==========================================
-   9. シフト（ドラムロール復元・色修正）
+   9. シフト
    ========================================== */
 let tempShiftData = {}, editingDate = 1, isWorkingTemp = false;
 function initDrums() {
@@ -431,9 +461,26 @@ function moveShiftDate(diff) {
    ========================================== */
 window.onload = async () => {
     updateClock(); setInterval(updateClock, 1000);
+    
+    // 1. クラウドからデータを読み込む
     await loadAllDataFromGist();
+    
+    // 2. 読み込んだデータを変数にセットする
     refreshGlobalVariables();
-    renderHomeLinks(); createCalendar(); initIdeas(); initStickies(); initTodo(); initTimetable(); initShift(); updateHomeTodayEvent();
-    if(document.getElementById('daily-memo')) document.getElementById('daily-memo').value = localStorage.getItem('daily-memo') || "";
+    
+    // 3. 各画面を初期化する
+    renderHomeLinks(); 
+    createCalendar(); 
+    initIdeas(); 
+    initStickies(); 
+    initTodo(); 
+    initTimetable(); 
+    initShift(); 
+    updateHomeTodayEvent();
+    
+    if(document.getElementById('daily-memo')) {
+        document.getElementById('daily-memo').value = localStorage.getItem('daily-memo') || "";
+    }
+    
     showPage('home');
 };
