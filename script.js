@@ -580,7 +580,7 @@ function editTimetableSlot(sem, key, oldSub, oldPlace) {
 
 
 /* ==========================================
-   9. シフト管理機能（修正・安定版）
+   9. シフト管理機能（完全版：即時初期化対応）
    ========================================== */
 let shiftData = JSON.parse(localStorage.getItem('shift-data')) || {};
 let tempShiftData = {}; 
@@ -588,14 +588,15 @@ let editingDate = 1;
 let currentShiftDate = new Date(); 
 let isWorkingTemp = false;
 
-// 1. ドラムロールの選択肢（00-23, 00-59）を生成
+// 1. ドラムロールの選択肢を「即座に」生成する
 function setupDrumRolls() {
     const hours = ["s-hour", "e-hour"];
     const mins = ["s-min", "e-min"];
     
     hours.forEach(id => {
         const sel = document.getElementById(id);
-        if(!sel || sel.options.length > 0) return;
+        if(!sel) return;
+        sel.innerHTML = ""; // 重複防止
         for(let i=0; i<24; i++) {
             let val = i.toString().padStart(2, '0');
             sel.add(new Option(val, val));
@@ -603,7 +604,8 @@ function setupDrumRolls() {
     });
     mins.forEach(id => {
         const sel = document.getElementById(id);
-        if(!sel || sel.options.length > 0) return;
+        if(!sel) return;
+        sel.innerHTML = ""; // 重複防止
         for(let i=0; i<60; i++) {
             let val = i.toString().padStart(2, '0');
             sel.add(new Option(val, val));
@@ -611,7 +613,79 @@ function setupDrumRolls() {
     });
 }
 
-// 2. 出勤・休みの切り替え
+// 2. 表示月切り替え
+function changeShiftMonth(diff) {
+    currentShiftDate.setMonth(currentShiftDate.getMonth() + diff);
+    initShift();
+}
+
+// 3. シフトリストの初期化
+function initShift() {
+    setupDrumRolls();
+
+    const year = currentShiftDate.getFullYear();
+    const month = currentShiftDate.getMonth() + 1;
+    const daysInMonth = new Date(year, month, 0).getDate();
+    
+    const title = document.getElementById('shift-month-title');
+    if(title) title.innerText = `${year}年 ${month}月`;
+
+    const container = document.getElementById('shift-list-container');
+    if(!container) return;
+    container.innerHTML = "";
+
+    const monthKey = `${year}-${month}`;
+    const currentMonthData = shiftData[monthKey] || {};
+    const days = ["日", "月", "火", "水", "木", "金", "土"];
+
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dateObj = new Date(year, month - 1, d);
+        const dayIdx = dateObj.getDay();
+        
+        let dayClass = "";
+        if(dayIdx === 0) dayClass = "day-sun";
+        if(dayIdx === 6) dayClass = "day-sat";
+
+        const row = document.createElement('div');
+        row.className = "shift-row";
+        
+        const data = currentMonthData[d];
+        
+        // --- 修正ポイント：表示内容の判定 ---
+        let timeStr = "";
+        let timeStyle = "";
+        
+        if (data) {
+            if (data.work) {
+                // 出勤の場合
+                timeStr = `${data.s} - ${data.e}`;
+                timeStyle = "color: var(--accent);"; 
+            } else {
+                // 休みの場合
+                timeStr = "休み";
+                timeStyle = "color: #ff4444; font-weight: bold; opacity: 0.8;"; 
+            }
+        }
+
+        row.innerHTML = `
+            <div class="date-col">${d}</div>
+            <div class="day-col ${dayClass}">(${days[dayIdx]})</div>
+            <div class="time-col" style="${timeStyle}">${timeStr}</div>
+            <div class="edit-col"></div>
+        `;
+
+        const btn = document.createElement('button');
+        btn.innerText = "編集";
+        btn.style = "background:none; border:1px solid #555; color:#aaa; border-radius:5px; font-size:0.6rem; padding:4px 8px; cursor:pointer;";
+        btn.onclick = () => openShiftEditor(d);
+
+        row.querySelector('.edit-col').appendChild(btn);
+        container.appendChild(row);
+    }
+}
+
+
+// 4. エディタ関連
 function setWorkStatus(status) {
     isWorkingTemp = status;
     const btnOn = document.getElementById('btn-work-on');
@@ -619,34 +693,31 @@ function setWorkStatus(status) {
     const timeUI = document.getElementById('shift-time-ui');
     
     if(status) {
-        btnOn.style.background = "var(--accent)"; // 出勤：アクセントカラー
+        btnOn.style.background = "var(--accent)";
+        btnOn.style.color = "white";
         btnOff.style.background = "#444";
         timeUI.style.opacity = "1";
         timeUI.style.pointerEvents = "auto";
     } else {
         btnOn.style.background = "#444";
-        btnOff.style.background = "#ff4444"; // 休み：赤
+        btnOff.style.background = "#ff4444";
+        btnOff.style.color = "white";
         timeUI.style.opacity = "0.2";
         timeUI.style.pointerEvents = "none";
     }
 }
 
-// 3. エディタを開く
 function openShiftEditor(day) {
-    setupDrumRolls(); // 選択肢を生成
     editingDate = day;
     const year = currentShiftDate.getFullYear();
     const month = currentShiftDate.getMonth() + 1;
     const monthKey = `${year}-${month}`;
-    
-    // メモリに現在のデータをロード
     tempShiftData = JSON.parse(JSON.stringify(shiftData[monthKey] || {}));
     
     updateEditorUI();
     document.getElementById('shift-editor-modal').style.display = 'block';
 }
 
-// 4. エディタの表示更新
 function updateEditorUI() {
     const year = currentShiftDate.getFullYear();
     const month = currentShiftDate.getMonth() + 1;
@@ -655,28 +726,28 @@ function updateEditorUI() {
     
     document.getElementById('edit-date-display').innerText = `${month}月 ${editingDate}日 (${days[dateObj.getDay()]})`;
     
-    const data = tempShiftData[editingDate] || { work: false, s: "09:00", e: "18:00" };
+    // --- 修正ポイント：新規データの場合はデフォルトを「出勤(true)」にする ---
+    // もしデータがあればそれを使い、なければ work: true (出勤) を初期値にする
+    const data = tempShiftData[editingDate] || { work: true, s: "09:00", e: "18:00" };
     
-    // 状態反映
+    // 状態を反映（これで最初から「出勤」が明るくなります）
     setWorkStatus(data.work);
     
-    // 時間反映（09:00 形式を分割してセット）
+    // 時間をセット
     const sParts = data.s.split(':');
     const eParts = data.e.split(':');
-    
     document.getElementById('s-hour').value = sParts[0];
     document.getElementById('s-min').value = sParts[1];
     document.getElementById('e-hour').value = eParts[0];
     document.getElementById('e-min').value = eParts[1];
 }
 
-// 5. 保存ロジック
+
 function saveToMemory() {
     const sh = document.getElementById('s-hour').value;
     const sm = document.getElementById('s-min').value;
     const eh = document.getElementById('e-hour').value;
     const em = document.getElementById('e-min').value;
-
     tempShiftData[editingDate] = {
         work: isWorkingTemp,
         s: `${sh}:${sm}`,
@@ -693,7 +764,7 @@ function moveShiftDate(diff) {
     let nextDate = editingDate + diff;
     if (nextDate < 1 || nextDate > daysInMonth) return;
 
-    commitTempToPermanent(); // 矢印移動で保存
+    commitTempToPermanent();
     editingDate = nextDate;
     updateEditorUI();
 }
@@ -714,6 +785,7 @@ function closeShiftEditor(isSave) {
     document.getElementById('shift-editor-modal').style.display = 'none';
     initShift();
 }
+
 
 
 
