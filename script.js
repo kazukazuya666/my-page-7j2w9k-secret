@@ -804,26 +804,49 @@ document.addEventListener('click', () => {
     if (menu) menu.style.display = 'none';
 });
 
-// 1. すべてのデータを一括でコピーする機能
+
+// 1. すべてのデータを一括でコピーする
 function exportData() {
-    const allData = {
-        shift: JSON.parse(localStorage.getItem('shift-data')) || {},
-        links: JSON.parse(localStorage.getItem('quick-links')) || [],
-        notes: JSON.parse(localStorage.getItem('notes-data')) || [], // メモ
-        todo: JSON.parse(localStorage.getItem('todo-data')) || [],   // ToDo
-        calendar: JSON.parse(localStorage.getItem('calendar-events')) || {} // カレンダー
-    };
+    // このアプリで使っている可能性のある全ての保存名をリストアップ
+    const keys = [
+        'shift-data',       // シフト
+        'quick-links',      // クイックリンク
+        'links',            // リンク（別名）
+        'todo-data',        // ToDo
+        'todos',            // ToDo（別名）
+        'reminders',        // ToDo（別名）
+        'notes-data',       // メモ
+        'notes',            // メモ（別名）
+        'timetable-data',   // 時間割
+        'timetable',        // 時間割（別名）
+        'sticky-notes',     // 付箋
+        'stickies',         // 付箋（別名）
+        'idea-notes',       // ネタ帳
+        'ideas',            // ネタ帳（別名）
+        'calendar-events',  // カレンダー
+        'events'            // カレンダー（別名）
+    ];
+
+    const allData = {};
     
+    // 存在するデータだけを allData に詰め込む
+    keys.forEach(key => {
+        const value = localStorage.getItem(key);
+        if (value) {
+            allData[key] = value; // 文字列のまま保存
+        }
+    });
+
     const dataString = JSON.stringify(allData);
 
     navigator.clipboard.writeText(dataString).then(() => {
-        alert("【全データ】をコピーしました！\n別の端末で『読み込む』を押して貼り付けてください。");
+        alert("【全データ】をコピーしました！\n（シフト、リンク、ToDo、時間割、メモ、付箋、ネタ帳、カレンダー）\n\n別の端末で『読み込む』を押して貼り付けてください。");
     }).catch(() => {
         prompt("コピーに失敗しました。以下の文字をすべてコピーしてください：", dataString);
     });
 }
 
-// 2. すべてのデータを一括で読み込む機能
+// 2. すべてのデータを一括で読み込む
 function importData() {
     const jsonString = prompt("コピーしたデータをここに貼り付けてください：");
     if (!jsonString) return;
@@ -832,14 +855,12 @@ function importData() {
         const importedData = JSON.parse(jsonString);
         if (confirm("全データを上書きしますか？現在の内容はすべて消えてしまいます。")) {
             
-            // 各データをLocalStorageに保存
-            if (importedData.shift) localStorage.setItem('shift-data', JSON.stringify(importedData.shift));
-            if (importedData.links) localStorage.setItem('quick-links', JSON.stringify(importedData.links));
-            if (importedData.notes) localStorage.setItem('notes-data', JSON.stringify(importedData.notes));
-            if (importedData.todo) localStorage.setItem('todo-data', JSON.stringify(importedData.todo));
-            if (importedData.calendar) localStorage.setItem('calendar-events', JSON.stringify(importedData.calendar));
+            // 全てのデータを一つずつLocalStorageに復元
+            Object.keys(importedData).forEach(key => {
+                localStorage.setItem(key, importedData[key]);
+            });
 
-            alert("全データの読み込みが完了しました！アプリを再起動します。");
+            alert("全データの同期が完了しました！アプリを再起動します。");
             location.reload();
         }
     } catch (e) {
