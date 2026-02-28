@@ -2,60 +2,37 @@
    1. セキュリティ：初回アクセス認証
    ========================================== */
 (function() {
-    const SECRET_KEY = "harakazu5566"; // パスワード
+    const SECRET_KEY = "harakazu5566"; 
     const AUTH_ID = "my_dashboard_authenticated";
+    if (localStorage.getItem(AUTH_ID) === "true") return;
 
-    if (localStorage.getItem(AUTH_ID) === "true") {
-        return;
-    }
-
-    let pass = prompt("新しいデバイスを検知しました。パスワードを入力してください。");
-
+    let pass = prompt("パスワードを入力してください。");
     if (pass === SECRET_KEY) {
         localStorage.setItem(AUTH_ID, "true");
-        alert("認証に成功しました。次からは入力を省略します。");
     } else {
-        alert("パスワードが違います。アクセスできません。");
-        document.body.innerHTML = `
-            <div style="background:#1a1a1a; color:white; height:100vh; display:flex; align-items:center; justify-content:center; font-family:sans-serif;">
-                <div style="text-align:center;">
-                    <h1>🔒 Access Denied</h1>
-                    <p>正しいパスワードが必要です。</p>
-                    <button onclick="location.reload()" style="background:var(--accent); color:white; border:none; padding:10px 20px; border-radius:10px;">再試行</button>
-                </div>
-            </div>`;
+        alert("拒否されました。");
+        document.body.innerHTML = "<h1>Access Denied</h1>";
     }
 })();
 
 /* ==========================================
    2. グローバル変数・データ管理
    ========================================== */
-// リンク関連
-let links = JSON.parse(localStorage.getItem('user-links')) || [
-    {name: "Google", url: "https://google.com"},
-    {name: "YouTube", url: "https://youtube.com"}
-];
+let links = JSON.parse(localStorage.getItem('user-links')) || [{name: "Google", url: "https://google.com"}];
 let uraLinks = JSON.parse(localStorage.getItem('ura-links')) || [];
 let gateName = localStorage.getItem('gate-name') || "リンク設定";
 let isUraView = false;
 let isUraEditorMode = false;
 
-// カレンダー関連
 let displayDate = new Date();
 let selectedFullDate = "";
 
-// ネタ帳・付箋・ToDo関連
 let ideaPages = JSON.parse(localStorage.getItem('idea-pages')) || [{title: "ページ1", content: ""}];
 let currentPageIndex = 0;
 let stickies = JSON.parse(localStorage.getItem('sticky-notes')) || [];
-let todoData = JSON.parse(localStorage.getItem('todo-data')) || [{category: "映画", items: []}];
+let todoData = JSON.parse(localStorage.getItem('todo-data')) || [{category: "一般", items: []}];
 let currentTodoCategoryIndex = 0;
 let currentTodoFilter = 'all';
-
-// 時間割関連
-let currentSemester = localStorage.getItem('current-semester') || "1年 前期";
-const semesters = ["1年 前期", "1年 後期", "2年 前期", "2年 後期", "3年 前期", "3年 後期", "4年 前期", "4年 後期"];
-let timetableData = JSON.parse(localStorage.getItem('timetable-data')) || {};
 
 /* ==========================================
    3. 共通システム（時計・ページ切り替え）
@@ -63,32 +40,19 @@ let timetableData = JSON.parse(localStorage.getItem('timetable-data')) || {};
 function updateClock() {
     const now = new Date();
     const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-    const dateElem = document.getElementById('date');
-    const clockElem = document.getElementById('clock');
-    if (dateElem) dateElem.innerText = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} (${days[now.getDay()]})`;
-    if (clockElem) clockElem.innerText = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+    document.getElementById('date').innerText = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} (${days[now.getDay()]})`;
+    document.getElementById('clock').innerText = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
 }
 
 function showPage(pageId) {
     document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
-    const target = document.getElementById(pageId);
-    if (target) target.classList.add('active');
+    document.getElementById(pageId).classList.add('active');
     
-    // ページ切り替え時の自動更新
-    if (pageId === 'home') {
-        updateHomeTodayEvent();
-        renderHomeLinks();
-    }
-    // ★ここを追加！ シフトページを開いたらリストを即座に作る
-    if (pageId === 'shift') {
-        initShift();
-    }
+    if (pageId === 'home') { updateHomeTodayEvent(); renderHomeLinks(); initTodo(); }
+    if (pageId === 'notes-all') { initIdeas(); initStickies(); }
     if (pageId === 'calendar') createCalendar();
-    if (pageId === 'timetable') initTimetable();
-    
     window.scrollTo(0, 0);
 }
-
 
 /* ==========================================
    4. クイックリンク機能
@@ -217,13 +181,10 @@ function toggleUraMode() { isUraEditorMode = !isUraEditorMode; renderEditorList(
 function createCalendar() {
     const year = displayDate.getFullYear();
     const month = displayDate.getMonth();
-    const monthDisplay = document.getElementById('calendar-month');
-    if(monthDisplay) monthDisplay.innerText = `${year}年 ${month + 1}月`;
-    
+    document.getElementById('calendar-month').innerText = `${year}年 ${month + 1}月`;
     const firstDay = new Date(year, month, 1).getDay();
     const lastDate = new Date(year, month + 1, 0).getDate();
     const tbody = document.getElementById('calendar-body');
-    if(!tbody) return;
     tbody.innerHTML = "";
     
     const today = new Date();
@@ -235,12 +196,10 @@ function createCalendar() {
         let row = document.createElement('tr');
         for (let j = 0; j < 7; j++) {
             let cell = document.createElement('td');
-            if (i === 0 && j < firstDay || date > lastDate) {
-                cell.innerText = "";
-            } else {
-                let d = date;
-                let fullDate = `${year}-${month + 1}-${d}`;
-                cell.innerText = d;
+            if (i === 0 && j < firstDay || date > lastDate) { cell.innerText = ""; }
+            else {
+                let fullDate = `${year}-${month + 1}-${date}`;
+                cell.innerText = date;
                 if (fullDate === todayStr) cell.classList.add('today');
                 if (localStorage.getItem(fullDate)) cell.classList.add('has-event');
                 if (selectedFullDate === fullDate) cell.classList.add('selected');
@@ -263,169 +222,27 @@ function selectDate(element, fullDate) {
 }
 
 function refreshEventInput() {
-    const label = document.getElementById('selected-date-label');
-    const input = document.getElementById('event-input');
-    if (selectedFullDate) {
-        if (label) label.innerText = selectedFullDate + " の予定";
-        if (input) input.value = localStorage.getItem(selectedFullDate) || "";
-    }
+    document.getElementById('selected-date-label').innerText = selectedFullDate + " の予定";
+    document.getElementById('event-input').value = localStorage.getItem(selectedFullDate) || "";
 }
 
 function saveEvent() {
-    if (!selectedFullDate) return;
     const val = document.getElementById('event-input').value;
-    if (val.trim()) {
-        localStorage.setItem(selectedFullDate, val);
-    } else {
-        localStorage.removeItem(selectedFullDate);
-    }
-    createCalendar(); 
-    updateHomeTodayEvent(); 
+    if (val.trim()) localStorage.setItem(selectedFullDate, val);
+    else localStorage.removeItem(selectedFullDate);
+    createCalendar(); updateHomeTodayEvent();
 }
 
-function changeMonth(diff) {
-    displayDate.setMonth(displayDate.getMonth() + diff);
-    createCalendar();
-}
+function changeMonth(diff) { displayDate.setMonth(displayDate.getMonth() + diff); createCalendar(); }
 
 function updateHomeTodayEvent() {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
-    const date = now.getDate();
-    
-    // カレンダー用のキー (例: 2026-2-28)
-    const fullDate = `${year}-${month}-${date}`;
-    // シフト用のキー (例: 2026-2)
-    const monthKey = `${year}-${month}`;
-
-    // --- 1. シフトデータの取得 ---
-    const currentMonthShift = shiftData[monthKey] || {};
-    const todayShift = currentMonthShift[date];
-    const shiftElem = document.getElementById('home-today-shift');
-    
-    if (shiftElem) {
-        if (todayShift && todayShift.work) {
-            shiftElem.innerText = `💼 ${todayShift.s} - ${todayShift.e}`;
-            shiftElem.style.color = "var(--accent)";
-        } else {
-            shiftElem.innerText = "休み・なし";
-            shiftElem.style.color = "#888";
-        }
-    }
-
-    // --- 2. カレンダー予定の取得 ---
-    const event = localStorage.getItem(fullDate) || "予定なし";
-    const eventElem = document.getElementById('home-today-event-text');
-    
-    if (eventElem) {
-        eventElem.innerText = event;
-    }
+    const fullDate = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+    document.getElementById('today-event-text').innerText = localStorage.getItem(fullDate) || "本日の予定はありません";
 }
-
 
 /* ==========================================
-   6. ノート機能（メモ・付箋・ネタ帳）
-   ========================================== */
-// デイリーメモ
-function saveDailyMemo() { localStorage.setItem('daily-memo', document.getElementById('daily-memo').value); }
-
-// 付箋
-function initStickies() {
-    const c = document.getElementById('sticky-container');
-    if (!c) return;
-    c.innerHTML = "";
-    stickies.forEach((n, i) => {
-        const d = document.createElement('div');
-        d.className = 'sticky-note';
-        d.style.backgroundColor = n.color;
-        d.style.width = "100px"; d.style.height = "100px";
-        d.innerHTML = `<textarea oninput="updateSticky(${i}, this.value)">${n.content}</textarea><span style="position:absolute;top:0;right:5px;cursor:pointer;" onclick="delSticky(${i})">×</span>`;
-        c.appendChild(d);
-    });
-}
-function addStickyNote() {
-    stickies.push({color: document.getElementById('note-color').value, content: ""});
-    localStorage.setItem('sticky-notes', JSON.stringify(stickies));
-    initStickies();
-}
-function updateSticky(i, v) { stickies[i].content = v; localStorage.setItem('sticky-notes', JSON.stringify(stickies)); }
-function delSticky(i) { stickies.splice(i,1); localStorage.setItem('sticky-notes', JSON.stringify(stickies)); initStickies(); }
-
-// ネタ帳の初期化（削除ボタン付き）
-function initIdeas() {
-    const bar = document.getElementById('tab-bar');
-    if (!bar) return; 
-    bar.innerHTML = "";
-    
-    ideaPages.forEach((p, i) => {
-        const group = document.createElement('div');
-        group.style.display = "inline-flex";
-        group.style.alignItems = "center";
-        group.style.backgroundColor = (i === currentPageIndex) ? "var(--accent)" : "#444";
-        group.style.borderRadius = "20px";
-        group.style.padding = "4px 12px";
-        group.style.marginRight = "8px";
-        group.style.cursor = "pointer";
-
-        // ページ名テキスト
-        const titleSpan = document.createElement('span');
-        titleSpan.innerText = p.title;
-        titleSpan.style.color = "white";
-        titleSpan.style.fontSize = "14px";
-        titleSpan.style.whiteSpace = "nowrap";
-        titleSpan.onclick = () => { currentPageIndex = i; initIdeas(); };
-        
-        // ダブルクリックで名前変更
-        titleSpan.ondblclick = () => {
-            const n = prompt("名前変更", p.title);
-            if(n) { p.title = n; saveIdeas(); initIdeas(); }
-        };
-
-        // ❌ 削除ボタン
-        const delBtn = document.createElement('span');
-        delBtn.innerText = " ×";
-        delBtn.style.color = "rgba(255,255,255,0.6)";
-        delBtn.style.marginLeft = "8px";
-        delBtn.style.fontSize = "16px";
-        delBtn.style.fontWeight = "bold";
-        delBtn.onclick = (e) => {
-            e.stopPropagation(); // 親要素のクリックイベント（切り替え）を防ぐ
-            deleteIdeaPage(i);
-        };
-
-        group.appendChild(titleSpan);
-        group.appendChild(delBtn);
-        bar.appendChild(group);
-    });
-
-    const noteArea = document.getElementById('idea-note');
-    if (noteArea) noteArea.value = ideaPages[currentPageIndex].content;
-}
-
-// ページ削除用の関数
-function deleteIdeaPage(index) {
-    if (ideaPages.length <= 1) {
-        alert("これ以上ページを削除できません（最低1ページ必要です）。");
-        return;
-    }
-    
-    if (confirm(`ページ「${ideaPages[index].title}」を削除しますか？`)) {
-        ideaPages.splice(index, 1);
-        
-        // 現在のページを削除した場合、インデックスを調整
-        if (currentPageIndex >= ideaPages.length) {
-            currentPageIndex = ideaPages.length - 1;
-        }
-        
-        saveIdeas();
-        initIdeas();
-    }
-}
-
-
-/* ==========================================
-   7. ToDo機能（完全版：編集・フィルタ・追加対応）
+   6. ToDo機能（完全版：編集・フィルタ・追加対応）
    ========================================== */
 function initTodo() {
     const bar = document.getElementById('todo-category-bar');
@@ -587,286 +404,241 @@ function saveTodo() {
 
 
 /* ==========================================
-   8. 時間割機能（完全修正版）
+   7. ノート機能（メモ・付箋・ネタ帳）
    ========================================== */
-function initTimetable() {
-    const select = document.getElementById('semester-select');
-    const tbody = document.getElementById('timetable-body');
-    if (!tbody) return;
+// デイリーメモ
+function saveDailyMemo() { localStorage.setItem('daily-memo', document.getElementById('daily-memo').value); }
 
-    // 1. 学期選択肢（プルダウン）の更新
-    if (select) {
-        select.innerHTML = "";
-        semesters.forEach(sem => {
-            const opt = document.createElement('option');
-            opt.value = sem;
-            opt.innerText = sem;
-            opt.selected = (currentSemester === sem);
-            select.appendChild(opt);
-        });
-    }
+// 付箋
+function initStickies() {
+    const c = document.getElementById('sticky-container');
+    if (!c) return;
+    c.innerHTML = "";
+    stickies.forEach((n, i) => {
+        const d = document.createElement('div');
+        d.className = 'sticky-note';
+        d.style.backgroundColor = n.color;
+        d.style.width = "100px"; d.style.height = "100px";
+        d.innerHTML = `<textarea oninput="updateSticky(${i}, this.value)">${n.content}</textarea><span style="position:absolute;top:0;right:5px;cursor:pointer;" onclick="delSticky(${i})">×</span>`;
+        c.appendChild(d);
+    });
+}
+function addStickyNote() {
+    stickies.push({color: document.getElementById('note-color').value, content: ""});
+    localStorage.setItem('sticky-notes', JSON.stringify(stickies));
+    initStickies();
+}
+function updateSticky(i, v) { stickies[i].content = v; localStorage.setItem('sticky-notes', JSON.stringify(stickies)); }
+function delSticky(i) { stickies.splice(i,1); localStorage.setItem('sticky-notes', JSON.stringify(stickies)); initStickies(); }
 
-    // 2. テーブル描画の準備
-    tbody.innerHTML = "";
-    const days = ["月", "火", "水", "木", "金"];
-
-    for (let period = 1; period <= 5; period++) {
-        const row = document.createElement('tr'); // 行を作る
+// ネタ帳（×ボタン追加版）
+function initIdeas() {
+    const bar = document.getElementById('tab-bar');
+    if (!bar) return; 
+    bar.innerHTML = "";
+    ideaPages.forEach((p, i) => {
+        // ボタンの代わりにdivでグループ化（ToDoと同じ構造）
+        const group = document.createElement('div');
+        group.style = `display:inline-flex; align-items:center; background:${i === currentPageIndex ? 'var(--accent)' : '#444'}; color:white; border-radius:20px; padding:8px 16px; margin-right:8px; cursor:pointer; font-size:14px; white-space:nowrap;`;
         
-        // --- 時限列 (1, 2, 3...) ---
-        const timeTd = document.createElement('td');
-        timeTd.innerText = period;
-        timeTd.style.fontWeight = "normal";
-        timeTd.style.color = "#888";
-        timeTd.style.fontSize = "0.75rem";
-        row.appendChild(timeTd);
+        // 名前部分
+        const nameSpan = document.createElement('span');
+        nameSpan.innerText = p.title;
+        nameSpan.onclick = () => { currentPageIndex = i; initIdeas(); };
+        nameSpan.ondblclick = () => {
+            const n = prompt("名前変更", p.title);
+            if(n) { p.title = n; saveIdeas(); initIdeas(); }
+        };
 
-        // --- 曜日列 (月〜金) ---
-        days.forEach(day => {
-            const td = document.createElement('td');
-            const key = `${day}-${period}`;
-            
-            // その学期のそのマスのデータを取得
-            const currentSemData = timetableData[currentSemester] || {};
-            const data = currentSemData[key] || { subject: "", place: "" };
+        // 削除用のバツ印
+        const delBtn = document.createElement('span');
+        delBtn.innerText = " ×";
+        delBtn.style = "margin-left:8px; opacity:0.6; font-weight:bold;";
+        delBtn.onclick = (e) => {
+            e.stopPropagation(); // 重なり防止
+            if (ideaPages.length > 1) {
+                if(confirm(`「${p.title}」を削除しますか？`)) {
+                    ideaPages.splice(i, 1);
+                    currentPageIndex = 0;
+                    saveIdeas();
+                    initIdeas();
+                }
+            } else {
+                alert("これ以上削除できません");
+            }
+        };
 
-            td.innerHTML = `
-                <span class="tt-subject">${data.subject || ""}</span>
-                <span class="tt-place">${data.place || ""}</span>
-            `;
-
-            // クリックで編集
-            td.onclick = () => {
-                // 押した瞬間の学期とデータを特定する
-                const activeSemData = timetableData[currentSemester] || {};
-                const activeCell = activeSemData[key] || { subject: "", place: "" };
-                editTimetableSlot(currentSemester, key, activeCell.subject, activeCell.place);
-            };
-
-            row.appendChild(td); // セルを行に追加
-        });
-
-        // 💡 ここが抜けていました！行をテーブル本体に追加
-        tbody.appendChild(row); 
+        group.appendChild(nameSpan);
+        group.appendChild(delBtn);
+        bar.appendChild(group);
+    });
+    const noteArea = document.getElementById('idea-note');
+    if (noteArea && ideaPages[currentPageIndex]) {
+        noteArea.value = ideaPages[currentPageIndex].content;
     }
 }
-
-// 編集用関数
-function editTimetableSlot(sem, key, oldSub, oldPlace) {
-    const sub = prompt(`【${sem}】${key}\n科目名を入力:`, oldSub);
-    if (sub === null) return;
-    
-    const place = prompt(`【${sem}】${key}\n教室・場所を入力:`, oldPlace);
-    if (place === null) return;
-
-    // 指定された学期（sem）にのみ保存
-    if (!timetableData[sem]) timetableData[sem] = {};
-    timetableData[sem][key] = { subject: sub, place: place };
-    
-    localStorage.setItem('timetable-data', JSON.stringify(timetableData));
-    
-    initTimetable(); // 画面を更新
+function createNewPage() {
+    const n = prompt("ページ名", "新ページ");
+    if(n) { ideaPages.push({title: n, content: ""}); currentPageIndex = ideaPages.length - 1; saveIdeas(); initIdeas(); }
 }
-
-// HTMLのselectから呼ばれる関数もセットで
-function changeSemester(val) {
-    currentSemester = val;
-    localStorage.setItem('current-semester', val);
-    initTimetable();
+function saveCurrentIdea() {
+    if (ideaPages[currentPageIndex]) {
+        ideaPages[currentPageIndex].content = document.getElementById('idea-note').value;
+        saveIdeas();
+    }
 }
-
-
+function saveIdeas() { localStorage.setItem('idea-pages', JSON.stringify(ideaPages)); }
 
 
 
 /* ==========================================
-   9. シフト管理機能（修正・安定版）
+   8. シフト管理システム
    ========================================== */
-let shiftData = JSON.parse(localStorage.getItem('shift-data')) || {};
-let tempShiftData = {}; 
-let editingDate = 1; 
-let currentShiftDate = new Date(); 
+let shiftData = JSON.parse(localStorage.getItem('shift-data')) || {}; // { "2026-2-1": {type:'work', start:'09:00', end:'18:00'} }
+let tempShiftBuffer = {}; // 編集中の一次保存用
+let editorCurrentDate = null; // 現在編集中のDateオブジェクト
+let shiftDisplayDate = new Date(); // 表示中の年月
 
-// 表示月を切り替える
-function changeShiftMonth(diff) {
-    currentShiftDate.setMonth(currentShiftDate.getMonth() + diff);
-    initShift();
-}
-
-// シフト画面の初期化（ボタンを確実に動かすための書き方）
-function initShift() {
-    const year = currentShiftDate.getFullYear();
-    const month = currentShiftDate.getMonth() + 1;
-    const daysInMonth = new Date(year, month, 0).getDate();
-    
-    const title = document.getElementById('shift-month-title');
-    if(title) title.innerText = `${year}年 ${month}月`;
-
+// シフト画面の表示
+function renderShiftList() {
     const container = document.getElementById('shift-list-container');
-    if(!container) return;
-    container.innerHTML = ""; // 一旦中身を空にする
+    const monthDisp = document.getElementById('shift-month-display');
+    if (!container) return;
 
-    const monthKey = `${year}-${month}`;
-    const currentMonthData = shiftData[monthKey] || {};
-    const days = ["日", "月", "火", "水", "木", "金", "土"];
+    const year = shiftDisplayDate.getFullYear();
+    const month = shiftDisplayDate.getMonth();
+    monthDisp.innerText = `${year}年 ${month + 1}月`;
 
-    for (let d = 1; d <= daysInMonth; d++) {
-        const dateObj = new Date(year, month - 1, d);
-        const dayIdx = dateObj.getDay();
+    container.innerHTML = "";
+    const lastDate = new Date(year, month + 1, 0).getDate();
+
+    for (let d = 1; d <= lastDate; d++) {
+        const dateObj = new Date(year, month, d);
+        const dateStr = `${year}-${month + 1}-${d}`;
+        const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+        const dayClass = dateObj.getDay() === 0 ? 'sun' : (dateObj.getDay() === 6 ? 'sat' : '');
         
-        let dayClass = "";
-        if(dayIdx === 0) dayClass = "day-sun";
-        if(dayIdx === 6) dayClass = "day-sat";
-
+        const data = shiftData[dateStr] || { type: 'none' };
+        
         const row = document.createElement('div');
-        row.className = "shift-row";
-        
-        const data = currentMonthData[d];
-        const timeStr = (data && data.work) ? `${data.s} - ${data.e}` : "";
-
-        // 行のデザイン
+        row.className = 'shift-row';
         row.innerHTML = `
-            <div class="date-col">${d}</div>
-            <div class="day-col ${dayClass}">(${days[dayIdx]})</div>
-            <div class="time-col">${timeStr}</div>
-            <div class="edit-col">
-                <button class="edit-btn-manual" style="background:none; border:1px solid #555; color:#aaa; border-radius:5px; font-size:0.6rem; padding:4px 8px; cursor:pointer;">編集</button>
+            <div class="shift-date-info ${dayClass}">${d} (${dayNames[dateObj.getDay()]})</div>
+            <div class="shift-time-info ${data.type === 'off' ? 'off' : ''}">
+                ${data.type === 'work' ? `${data.start} - ${data.end}` : (data.type === 'off' ? '休み' : '-')}
             </div>
+            <button class="edit-icon-btn" onclick="openShiftEditor(${d})">編集</button>
         `;
-
-        // 💡 ここでボタンに直接動作を覚えさせる
-        const btn = row.querySelector('.edit-btn-manual');
-        btn.onclick = () => {
-            openShiftEditor(d);
-        };
-
         container.appendChild(row);
     }
 }
 
-// エディタを開く
+// 編集モーダルを開く
 function openShiftEditor(day) {
-    editingDate = day;
-    const year = currentShiftDate.getFullYear();
-    const month = currentShiftDate.getMonth() + 1;
-    const monthKey = `${year}-${month}`;
-    
-    tempShiftData = JSON.parse(JSON.stringify(shiftData[monthKey] || {}));
+    const year = shiftDisplayDate.getFullYear();
+    const month = shiftDisplayDate.getMonth();
+    editorCurrentDate = new Date(year, month, day);
+    tempShiftBuffer = {}; // バッファをリセット
     
     updateEditorUI();
-    const modal = document.getElementById('shift-editor-modal');
-    if(modal) modal.style.display = 'block';
+    document.getElementById('shift-editor-modal').style.display = 'flex';
 }
 
-// UI更新
+// エディタ内のUI更新（日付切り替え時など）
 function updateEditorUI() {
-    const year = currentShiftDate.getFullYear();
-    const month = currentShiftDate.getMonth() + 1;
-    const dateObj = new Date(year, month - 1, editingDate);
-    const days = ["日", "月", "火", "水", "木", "金", "土"];
-    
-    const dateDisplay = document.getElementById('edit-date-display');
-    if(dateDisplay) dateDisplay.innerText = `${month}月 ${editingDate}日 (${days[dateObj.getDay()]})`;
-    
-    const data = tempShiftData[editingDate] || { work: false, s: "09:00", e: "18:00" };
-    
-    const statusCheck = document.getElementById('shift-work-status');
-    const startInput = document.getElementById('shift-start');
-    const endInput = document.getElementById('shift-end');
+    const y = editorCurrentDate.getFullYear();
+    const m = editorCurrentDate.getMonth() + 1;
+    const d = editorCurrentDate.getDate();
+    const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+    const dateStr = `${y}-${m}-${d}`;
 
-    if(statusCheck) statusCheck.checked = data.work;
-    if(startInput) startInput.value = data.s;
-    if(endInput) endInput.value = data.e;
+    document.getElementById('editor-date-display').innerText = `${m}月 ${d}日 (${dayNames[editorCurrentDate.getDay()]})`;
+
+    // 保存済みデータまたはバッファ、なければデフォルトを読み込み
+    const data = tempShiftBuffer[dateStr] || shiftData[dateStr] || { type: 'work', start: '09:00', end: '18:00' };
     
-    toggleShiftInput();
+    setShiftType(data.type || 'work');
+    document.getElementById('shift-start').value = data.start || '09:00';
+    document.getElementById('shift-end').value = data.end || '18:00';
 }
 
-// 入力可否切り替え
-function toggleShiftInput() {
-    const statusCheck = document.getElementById('shift-work-status');
-    const timeInputs = document.getElementById('shift-time-inputs');
-    if(!statusCheck || !timeInputs) return;
-
-    const isWork = statusCheck.checked;
-    timeInputs.style.opacity = isWork ? "1" : "0.3";
-    timeInputs.style.pointerEvents = isWork ? "auto" : "none";
+// 出勤・休みの切り替え
+function setShiftType(type) {
+    const isWork = type === 'work';
+    document.getElementById('btn-work').classList.toggle('active', isWork);
+    document.getElementById('btn-off').classList.toggle('active', !isWork);
+    document.getElementById('time-input-area').style.opacity = isWork ? "1" : "0.3";
+    document.getElementById('time-input-area').style.pointerEvents = isWork ? "auto" : "none";
 }
 
-// メモリにキープ
-function saveToMemory() {
-    const statusCheck = document.getElementById('shift-work-status');
-    const startInput = document.getElementById('shift-start');
-    const endInput = document.getElementById('shift-end');
+// エディタ内で日付移動（自動保存ロジック）
+function moveEditorDate(diff) {
+    // 現在の入力をバッファに保存
+    saveToBuffer();
 
-    if(!statusCheck) return;
+    const nextDate = new Date(editorCurrentDate);
+    nextDate.setDate(editorCurrentDate.getDate() + diff);
 
-    tempShiftData[editingDate] = {
-        work: statusCheck.checked,
-        s: startInput ? startInput.value : "09:00",
-        e: endInput ? endInput.value : "18:00"
+    // 月を跨がないチェック
+    if (nextDate.getMonth() === shiftDisplayDate.getMonth()) {
+        editorCurrentDate = nextDate;
+        updateEditorUI();
+    }
+}
+
+// 入力内容を一時的な箱（バッファ）に保存
+function saveToBuffer() {
+    const y = editorCurrentDate.getFullYear();
+    const m = editorCurrentDate.getMonth() + 1;
+    const d = editorCurrentDate.getDate();
+    const dateStr = `${y}-${m}-${d}`;
+
+    tempShiftBuffer[dateStr] = {
+        type: document.getElementById('btn-work').classList.contains('active') ? 'work' : 'off',
+        start: document.getElementById('shift-start').value,
+        end: document.getElementById('shift-end').value
     };
 }
 
-// ◀ ▶ 移動
-function moveShiftDate(diff) {
-    saveToMemory();
-    const year = currentShiftDate.getFullYear();
-    const month = currentShiftDate.getMonth() + 1;
-    const daysInMonth = new Date(year, month, 0).getDate();
-    
-    let nextDate = editingDate + diff;
-    if (nextDate < 1 || nextDate > daysInMonth) return;
-
-    // 矢印移動＝保存（コミット）
-    commitTempToPermanent();
-    
-    editingDate = nextDate;
-    updateEditorUI();
-}
-
-// 本保存
-function commitTempToPermanent() {
-    const year = currentShiftDate.getFullYear();
-    const month = currentShiftDate.getMonth() + 1;
-    const monthKey = `${year}-${month}`;
-    
-    shiftData[monthKey] = JSON.parse(JSON.stringify(tempShiftData));
-    localStorage.setItem('shift-data', JSON.stringify(shiftData));
-}
-
-// 完了/キャンセル
+// 完了・キャンセル
 function closeShiftEditor(isSave) {
     if (isSave) {
-        saveToMemory();
-        commitTempToPermanent();
+        saveToBuffer(); // 最後の日付分を保存
+        // バッファの内容を本番データに統合
+        Object.assign(shiftData, tempShiftBuffer);
+        localStorage.setItem('shift-data', JSON.stringify(shiftData));
     }
-    const modal = document.getElementById('shift-editor-modal');
-    if(modal) modal.style.display = 'none';
-    initShift();
+    // isSaveがfalse（キャンセル）の場合はtempShiftBufferを捨てるだけなので何もしない
+    
+    document.getElementById('shift-editor-modal').style.display = 'none';
+    renderShiftList();
+}
+
+// 月切り替え
+function changeShiftMonth(diff) {
+    shiftDisplayDate.setMonth(shiftDisplayDate.getMonth() + diff);
+    renderShiftList();
+}
+
+// 既存のshowPage関数に追記
+function showPage(pageId) {
+    document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    
+    if (pageId === 'home') { updateHomeTodayEvent(); renderHomeLinks(); initTodo(); }
+    if (pageId === 'notes-all') { initIdeas(); initStickies(); }
+    if (pageId === 'calendar') createCalendar();
+    if (pageId === 'shift-mgr') renderShiftList(); // 追加
+    window.scrollTo(0, 0);
 }
 
 
-
-
+   
 /* ==========================================
-   10. 初期化処理（システムの起動）
+   起動処理
    ========================================== */
 window.onload = () => {
-    updateClock();
-    setInterval(updateClock, 1000);
-    
-    // 各コンポーネントの初期化
-    createCalendar();
-    initIdeas();
-    initStickies();
-    initTodo();
-    updateHomeTodayEvent();
-    initTimetable();
-    initShift(); // ★ここを追加！ 起動時にデータを用意しておく
-    renderHomeLinks();
-
-    const memoElem = document.getElementById('daily-memo');
-    if (memoElem) memoElem.value = localStorage.getItem('daily-memo') || "";
-
+    updateClock(); setInterval(updateClock, 1000);
+    document.getElementById('daily-memo').value = localStorage.getItem('daily-memo') || "";
     showPage('home');
 };

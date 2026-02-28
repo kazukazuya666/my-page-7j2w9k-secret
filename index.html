@@ -9,7 +9,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="My Dashboard">
-    <link rel="apple-touch-icon" href="icon.png">
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -22,20 +21,10 @@
 
     <div id="home" class="page-content active">
         
-        <section class="section">
-    <h2>今日の予定</h2>
-    <div style="display: flex; flex-direction: column; gap: 10px;">
-        <div style="display: flex; align-items: center; border-bottom: 1px solid #444; padding-bottom: 8px;">
-            <div style="width: 60px; font-size: 0.75rem; color: var(--accent); font-weight: bold;">バイト</div>
-            <div id="home-today-shift" style="font-size: 1.1rem; flex: 1;">- - : - -</div>
+        <div class="section today-highlight">
+            <h2>📌 今日の予定</h2>
+            <div id="today-event-text">予定はありません</div>
         </div>
-        <div style="display: flex; align-items: center; padding-top: 2px;">
-            <div style="width: 60px; font-size: 0.75rem; color: var(--accent); font-weight: bold;">予定</div>
-            <div id="home-today-event-text" style="font-size: 1.1rem; flex: 1;">予定なし</div>
-        </div>
-    </div>
-</section>
-
         
         <div class="section">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
@@ -61,6 +50,7 @@
             </div>
         </div>
 
+
         <div class="section">
             <h2>✅ ToDo・コレクション</h2>
             <div id="todo-category-bar" style="display: flex; gap: 5px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 5px;"></div>
@@ -85,7 +75,7 @@
     <div id="notes-all" class="page-content">
         <div class="section">
            <h2>🗒️ メモ</h2>
-           <textarea id="daily-memo" oninput="saveDailyMemo()" placeholder="" style="height: 100px;"></textarea>
+           <textarea id="daily-memo" oninput="saveDailyMemo()" placeholder="ちょっとしたメモに..." style="height: 100px;"></textarea>
         </div>
 
         <div class="section">
@@ -100,7 +90,7 @@
         <div class="section">
             <h2>📝 ネタ帳</h2>
             <div id="tab-bar" style="display: flex; overflow-x: auto; margin-bottom: 10px; padding-bottom: 5px;"></div>
-            <textarea id="idea-note" oninput="saveCurrentIdea()" placeholder="" style="height: 150px;"></textarea>
+            <textarea id="idea-note" oninput="saveCurrentIdea()" placeholder="ここに書き込みます..." style="height: 150px;"></textarea>
             <button onclick="createNewPage()" class="nav-btn" style="margin-top: 8px; width: 100%;">＋ 新しいページ</button>
         </div>
     </div>
@@ -109,132 +99,91 @@
         <div class="section">
             <div class="calendar-header">
                 <button class="nav-btn" onclick="changeMonth(-1)">◀</button>
-                <h2 id="calendar-month">2026年 2月</h2>
+                <h2 id="calendar-month">0000年 0月</h2>
                 <button class="nav-btn" onclick="changeMonth(1)">▶</button>
             </div>
             <table class="calendar-table">
                 <thead><tr><th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th></tr></thead>
                 <tbody id="calendar-body"></tbody>
             </table>
-            <span id="selected-date-label">日付を選択してください</span>
-            <textarea id="event-input" rows="3" placeholder="予定をメモ..." oninput="saveEvent()"></textarea>
+            <span id="selected-date-label" style="display:block; margin-top:15px; font-size:0.9rem; color:var(--accent);">日付を選択してください</span>
+            <textarea id="event-input" rows="3" placeholder="予定をメモ..." oninput="saveEvent()" style="margin-top:10px;"></textarea>
         </div>
     </div>
 
-    <div id="timetable" class="page-content">
-    <div class="section">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h2 style="margin: 0; border-left: 4px solid var(--accent); padding-left: 10px;">🕒 時間割</h2>
-            
-            <select id="semester-select" onchange="changeSemester(this.value)" style="background: #333; color: var(--accent); border: 1px solid var(--accent); border-radius: 8px; padding: 6px 10px; font-size: 0.85rem; outline: none;">
-                </select>
-        </div>
-
-        <div class="timetable-scroll-wrapper">
-            <table class="timetable-table">
-                <thead>
-                    <tr>
-                        <th style="width: 28px;"></th>
-                        <th>月</th>
-                        <th>火</th>
-                        <th>水</th>
-                        <th>木</th>
-                        <th>金</th>
-                    </tr>
-                </thead>
-                <tbody id="timetable-body"></tbody>
-            </table>
+    <div id="link-editor-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; padding:20px; box-sizing:border-box;">
+        <div style="background:#2d2d2d; border-radius:15px; padding:20px; max-width:400px; margin:auto; position:relative;">
+            <h3 id="editor-title" style="margin-top:0;">🔗 リンク編集</h3>
+            <button onclick="toggleUraMode()" style="background:#444; color:white; border:none; padding:5px 10px; border-radius:5px; font-size:0.7rem; margin-bottom:10px;">表/裏 切替</button>
+            <div id="editor-link-list" style="max-height:300px; overflow-y:auto; margin-bottom:15px;"></div>
+            <input type="text" id="new-link-name" placeholder="名前" style="width:100%; margin-bottom:5px; padding:8px; border-radius:5px; background:#1a1a1a; color:white; border:1px solid #444;">
+            <input type="text" id="new-link-url" placeholder="URL" style="width:100%; margin-bottom:10px; padding:8px; border-radius:5px; background:#1a1a1a; color:white; border:1px solid #444;">
+            <div style="display:flex; gap:10px;">
+                <button onclick="addLink()" style="flex:1; background:var(--accent); color:white; border:none; padding:10px; border-radius:10px;">追加</button>
+                <button onclick="closeLinkEditor()" style="flex:1; background:#555; color:white; border:none; padding:10px; border-radius:10px;">閉じる</button>
+            </div>
         </div>
     </div>
-</div>
-
-
-    <div class="tab-menu">
-        <button onclick="showPage('home')">🏠<br>ホーム</button>
-        <button onclick="showPage('shift')">⚒️<br>シフト</button>
-        <button onclick="showPage('timetable')">🕒<br>時間割</button> 
-        <button onclick="showPage('notes-all')">📒<br>ノート</button> 
-        <button onclick="showPage('calendar')">📅<br>予定表</button>
-    </div>
 
 
 
-    <div id="shift" class="page-content">
+
+    <div id="shift-mgr" class="page-content">
         <div class="section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <button onclick="changeShiftMonth(-1)" class="nav-btn" style="padding: 5px 12px;">◀</button>
-                         <h2 id="shift-month-title" style="margin: 0; min-width: 120px; text-align: center; border: none;">2026年 2月</h2>
-                    <button onclick="changeShiftMonth(1)" class="nav-btn" style="padding: 5px 12px;">▶</button>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button class="nav-btn" onclick="changeShiftMonth(-1)">◀</button>
+                    <h2 id="shift-month-display" style="margin:0; border:none;">2026年 2月</h2>
+                    <button class="nav-btn" onclick="changeShiftMonth(1)">▶</button>
                 </div>
-                <button onclick="openShiftEditor(1)" class="nav-btn" style="font-size: 0.7rem; padding: 8px 12px;">一括編集</button>
+                <button class="nav-btn" onclick="openShiftEditor(1)">一括編集</button>
             </div>
-        
-            <div id="shift-list-container" style="width: 100%;">
+
+            <div id="shift-list-container" style="max-height: 70vh; overflow-y: auto;">
+                </div>
+        </div>
+    </div>
+
+    <div id="shift-editor-modal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; align-items:center; justify-content:center;">
+        <div class="section" style="width:90%; max-width:400px; background:#2d2d2d; position:relative;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <button class="nav-btn" onclick="moveEditorDate(-1)">◀</button>
+                <h3 id="editor-date-display" style="margin:0; color:var(--accent);">2月 1日 (月)</h3>
+                <button class="nav-btn" onclick="moveEditorDate(1)">▶</button>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <button id="btn-work" class="filter-btn active" style="flex:1; padding:12px;" onclick="setShiftType('work')">出勤</button>
+                <button id="btn-off" class="filter-btn" style="flex:1; padding:12px;" onclick="setShiftType('off')">休み</button>
+            </div>
+
+            <div id="time-input-area" style="display:flex; flex-direction:column; gap:15px; margin-bottom:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>開始</span>
+                    <input type="time" id="shift-start" style="background:#222; color:white; border:1px solid #444; padding:8px; border-radius:5px; font-size:1.1rem;">
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>終了</span>
+                    <input type="time" id="shift-end" style="background:#222; color:white; border:1px solid #444; padding:8px; border-radius:5px; font-size:1.1rem;">
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="nav-btn" style="flex:1; background:#666;" onclick="closeShiftEditor(false)">キャンセル</button>
+                <button class="nav-btn" style="flex:1;" onclick="closeShiftEditor(true)">完了</button>
             </div>
         </div>
     </div>
 
 
-    <div id="shift-editor-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:3000; padding:10px; box-sizing:border-box;">
-        <div style="background:#2d2d2d; border-radius:15px; padding:15px; max-width:400px; margin:20px auto; text-align:center; color:white;">
-            <h3 id="edit-date-display" style="margin:0 0 15px 0;">2月 1日 (月)</h3>
-        
-            <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
-                <button id="btn-work-on" onclick="setWorkStatus(true)" style="flex:1; padding:10px; border-radius:8px; border:none; background:#444;">出勤</button>
-                <button id="btn-work-off" onclick="setWorkStatus(false)" style="flex:1; padding:10px; border-radius:8px; border:none; background:#444;">休み</button>
-            </div>
-
-            <div id="shift-time-ui" style="display:none;">
-                <div style="display:flex; justify-content:center; align-items:center; gap:5px;">
-                    <div class="picker-group">
-                        <div style="font-size:0.7rem; color:#aaa;">開始</div>
-                        <div style="display:flex; background:#1a1a1a; border-radius:10px; padding:5px;">
-                            <select id="s-hour" class="drum-select"></select>
-                            <span style="line-height:40px;">:</span>
-                            <select id="s-min" class="drum-select"></select>
-                        </div>
-                    </div>
-                    <span style="margin-top:20px;">〜</span>
-                    <div class="picker-group">
-                        <div style="font-size:0.7rem; color:#aaa;">終了</div>
-                        <div style="display:flex; background:#1a1a1a; border-radius:10px; padding:5px;">
-                            <select id="e-hour" class="drum-select"></select>
-                            <span style="line-height:40px;">:</span>
-                            <select id="e-min" class="drum-select"></select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:25px;">
-                <button onclick="moveShiftDate(-1)" class="nav-btn">◀</button>
-                <div style="display:flex; gap:10px;">
-                    <button onclick="closeShiftEditor(false)" style="background:#555; color:white; border:none; padding:10px 15px; border-radius:10px;">中止</button>
-                    <button onclick="closeShiftEditor(true)" style="background:var(--accent); color:white; border:none; padding:10px 15px; border-radius:10px;">完了</button>
-                </div>
-                <button onclick="moveShiftDate(1)" class="nav-btn">▶</button>
-            </div>
-        </div>
-    </div>
-
-    <style>
-        .drum-select {
-        background: transparent;
-        color: white;
-        border: none;
-        font-size: 1.2rem;
-        padding: 10px 5px;
-        height: 45px;
-        appearance: none; /* 標準の矢印を消す */
-        text-align: center;
-        width: 45px;
-        }
-        .picker-group { display: flex; flex-direction: column; align-items: center; }
-    </style>
+    <nav class="tab-menu">
+        <button onclick="showPage('home')">🏠<br>ホーム</button>
+        <button onclick="showPage('shift-mgr')">🕒<br>シフト</button>
+        <button onclick="showPage('notes-all')">📒<br>ノート</button> 
+        <button onclick="showPage('calendar')">📅<br>予定表</button>
+    </nav>
 
 
     <script src="script.js" defer></script>
-
 </body>
 </html>
