@@ -585,66 +585,98 @@ function saveTodo() {
     localStorage.setItem('todo-data', JSON.stringify(todoData)); 
 }
 
+
 /* ==========================================
-   8. 時間割機能
+   8. 時間割機能（完全修正版）
    ========================================== */
 function initTimetable() {
-    const tabContainer = document.getElementById('semester-tabs');
+    const select = document.getElementById('semester-select');
     const tbody = document.getElementById('timetable-body');
-    if (!tabContainer || !tbody) return;
+    if (!tbody) return;
 
-    tabContainer.innerHTML = "";
-    semesters.forEach(sem => {
-        const btn = document.createElement('button');
-        btn.innerText = sem;
-        btn.className = (currentSemester === sem) ? "sem-btn active" : "sem-btn";
-        btn.onclick = () => {
-            currentSemester = sem;
-            localStorage.setItem('current-semester', sem);
-            initTimetable();
-        };
-        tabContainer.appendChild(btn);
-    });
+    // 1. 学期選択肢（プルダウン）の更新
+    if (select) {
+        select.innerHTML = "";
+        semesters.forEach(sem => {
+            const opt = document.createElement('option');
+            opt.value = sem;
+            opt.innerText = sem;
+            opt.selected = (currentSemester === sem);
+            select.appendChild(opt);
+        });
+    }
 
+    // 2. テーブル描画の準備
     tbody.innerHTML = "";
     const days = ["月", "火", "水", "木", "金"];
+
     for (let period = 1; period <= 5; period++) {
-        const row = document.createElement('tr');
+        const row = document.createElement('tr'); // 行を作る
+        
+        // --- 時限列 (1, 2, 3...) ---
         const timeTd = document.createElement('td');
         timeTd.innerText = period;
+        timeTd.style.fontWeight = "normal";
+        timeTd.style.color = "#888";
+        timeTd.style.fontSize = "0.75rem";
         row.appendChild(timeTd);
 
+        // --- 曜日列 (月〜金) ---
         days.forEach(day => {
             const td = document.createElement('td');
             const key = `${day}-${period}`;
-            const data = (timetableData[currentSemester] && timetableData[currentSemester][key]) 
-                         ? timetableData[currentSemester][key] 
-                         : {subject: "", place: ""};
+            
+            // その学期のそのマスのデータを取得
+            const currentSemData = timetableData[currentSemester] || {};
+            const data = currentSemData[key] || { subject: "", place: "" };
 
             td.innerHTML = `
-                <div style="width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                    <span class="tt-subject" style="white-space: normal; word-wrap: break-word; display: block; width: 100%;">${data.subject || ""}</span>
-                    <span class="tt-place" style="white-space: normal; word-wrap: break-word; display: block; width: 100%; margin-top: 4px;">${data.place || ""}</span>
-                </div>
+                <span class="tt-subject">${data.subject || ""}</span>
+                <span class="tt-place">${data.place || ""}</span>
             `;
-            td.onclick = () => editTimetableSlot(currentSemester, key, data.subject, data.place);
-            row.appendChild(td);
+
+            // クリックで編集
+            td.onclick = () => {
+                // 押した瞬間の学期とデータを特定する
+                const activeSemData = timetableData[currentSemester] || {};
+                const activeCell = activeSemData[key] || { subject: "", place: "" };
+                editTimetableSlot(currentSemester, key, activeCell.subject, activeCell.place);
+            };
+
+            row.appendChild(td); // セルを行に追加
         });
-        tbody.appendChild(row);
+
+        // 💡 ここが抜けていました！行をテーブル本体に追加
+        tbody.appendChild(row); 
     }
 }
 
+// 編集用関数
 function editTimetableSlot(sem, key, oldSub, oldPlace) {
-    const sub = prompt(`${sem}【${key}】\n科目名を入力:`, oldSub);
+    const sub = prompt(`【${sem}】${key}\n科目名を入力:`, oldSub);
     if (sub === null) return;
-    const place = prompt(`${sem}【${key}】\n教室・場所を入力:`, oldPlace);
+    
+    const place = prompt(`【${sem}】${key}\n教室・場所を入力:`, oldPlace);
     if (place === null) return;
 
+    // 指定された学期（sem）にのみ保存
     if (!timetableData[sem]) timetableData[sem] = {};
     timetableData[sem][key] = { subject: sub, place: place };
+    
     localStorage.setItem('timetable-data', JSON.stringify(timetableData));
+    
+    initTimetable(); // 画面を更新
+}
+
+// HTMLのselectから呼ばれる関数もセットで
+function changeSemester(val) {
+    currentSemester = val;
+    localStorage.setItem('current-semester', val);
     initTimetable();
 }
+
+
+
 
 
 /* ==========================================

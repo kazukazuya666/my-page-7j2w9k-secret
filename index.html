@@ -122,29 +122,32 @@
     </div>
 
     <div id="timetable" class="page-content">
-        <div class="section">
-            <h2>🕒 時間割</h2>
-            <div id="semester-tabs" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px;"></div>
+    <div class="section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 style="margin: 0; border-left: 4px solid var(--accent); padding-left: 10px;">🕒 時間割</h2>
             
-            <p style="font-size: 0.65rem; color: var(--accent); margin-bottom: 5px; text-align: right;">⇄ 横にスクロールできます</p>
+            <select id="semester-select" onchange="changeSemester(this.value)" style="background: #333; color: var(--accent); border: 1px solid var(--accent); border-radius: 8px; padding: 6px 10px; font-size: 0.85rem; outline: none;">
+                </select>
+        </div>
 
-            <div class="timetable-scroll-wrapper">
-                <table class="timetable-table">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>月</th>
-                            <th>火</th>
-                            <th>水</th>
-                            <th>木</th>
-                            <th>金</th>
-                        </tr>
-                    </thead>
-                    <tbody id="timetable-body"></tbody>
-                </table>
-            </div>
+        <div class="timetable-scroll-wrapper">
+            <table class="timetable-table">
+                <thead>
+                    <tr>
+                        <th style="width: 28px;"></th>
+                        <th>月</th>
+                        <th>火</th>
+                        <th>水</th>
+                        <th>木</th>
+                        <th>金</th>
+                    </tr>
+                </thead>
+                <tbody id="timetable-body"></tbody>
+            </table>
         </div>
     </div>
+</div>
+
 
     <div class="tab-menu">
         <button onclick="showPage('home')">🏠<br>ホーム</button>

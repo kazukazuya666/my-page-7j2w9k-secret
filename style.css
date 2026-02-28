@@ -365,6 +365,34 @@ h2 {
     text-overflow: ellipsis; /* はみ出たら...にする */
 }
 
+
+/* --- 時間割ヘッダーの調整 --- */
+#semester-select {
+    appearance: none;
+    background-color: #2a2a2a; /* 少し明るい黒にして質感を出す */
+    color: #ccc; /* 真っ白より少し落とした色で落ち着かせる */
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 4px 25px 4px 10px;
+    font-size: 0.8rem; /* 少し小さめに */
+    font-weight: 500; /* bold(700)より少し細い中間の太さに */
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+}
+
+#semester-select:focus {
+    border-color: var(--accent);
+    outline: none;
+}
+
+/* 不要になった「横に並べるタブ」のスタイルは削除してOK */
+#semester-tabs {
+    display: none; /* HTMLから消していれば不要ですが、念のため */
+}
+
+
 /* ==========================================
    10. シフト表
    ========================================== */
