@@ -235,11 +235,53 @@ function saveEvent() {
 
 function changeMonth(diff) { displayDate.setMonth(displayDate.getMonth() + diff); createCalendar(); }
 
+/* ==========================================
+   ホーム画面：今日のスケジュール更新
+   ========================================== */
 function updateHomeTodayEvent() {
     const now = new Date();
-    const fullDate = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
-    document.getElementById('today-event-text').innerText = localStorage.getItem(fullDate) || "本日の予定はありません";
+    const y = now.getFullYear();
+    const m = now.getMonth() + 1;
+    const d = now.getDate();
+    const dateStr = `${y}-${m}-${d}`;
+
+    // 1. バイト（シフトデータ）の反映
+    const shiftText = document.getElementById('home-today-shift');
+    if (shiftText) {
+        // shiftDataはlocalStorageから読み込まれている変数
+        const data = shiftData[dateStr];
+        if (data) {
+            if (data.type === 'work') {
+                shiftText.innerText = `${data.start} - ${data.end}`;
+                shiftText.style.color = "var(--accent)"; // 出勤時は水色
+            } else if (data.type === 'off') {
+                shiftText.innerText = "休み";
+                shiftText.style.color = "#888"; // 休みはグレー
+            } else {
+                shiftText.innerText = "- - : - -";
+                shiftText.style.color = "#555";
+            }
+        } else {
+            shiftText.innerText = "- - : - -";
+            shiftText.style.color = "#555";
+        }
+    }
+
+    // 2. 予定（カレンダーデータ）の反映
+    const eventText = document.getElementById('home-today-event-text');
+    if (eventText) {
+        // カレンダーの予定は日付文字列をキーとして保存されている
+        const savedEvent = localStorage.getItem(dateStr);
+        if (savedEvent) {
+            eventText.innerText = savedEvent;
+            eventText.style.color = "white"; // 予定がある時は白
+        } else {
+            eventText.innerText = "予定なし";
+            eventText.style.color = "#777"; // ない時はグレー
+        }
+    }
 }
+
 
 /* ==========================================
    6. ToDo機能（完全版：編集・フィルタ・追加対応）
